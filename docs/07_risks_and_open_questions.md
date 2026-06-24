@@ -17,7 +17,7 @@
 
 | Risk | Impact | Mitigation |
 |------|--------|------------|
-| `uv` is not installed/on PATH in this environment (confirmed during Phase 0 — PyCharm references a "uv (HW6)" SDK, but the `uv` binary itself was not found in PATH) | Cannot run `uv sync`/`uv lock`/`uv run` until resolved | User must install `uv` (https://docs.astral.sh/uv/) before chunk 2 onward; `pyproject.toml` is written correctly regardless so it works the moment `uv` is available |
+| ~~`uv` is not installed/on PATH~~ — **Resolved (Chunk 9)**: user installed `uv` 0.11.24; `uv.lock` is now committed and `uv run python -m hw6_race.main` works as the canonical command | None remaining | Closed — `uv sync`/`uv run` should be used going forward in place of the `python -m`/`pip` fallback used during Chunks 0–9's validation |
 | Two independent LLM-backed agents communicating in free natural language is inherently non-deterministic | Test flakiness, hard-to-reproduce bugs | Decision-strategy layer and communication layer are tested separately; integration tests use seeded/mocked LLM responses, not live model calls, to keep CI deterministic |
 | 150-line file cap (SG-C01) is aggressive for a stateful race engine | Risk of over-fragmenting `services/race` into too many tiny files, hurting readability | Plan explicit module boundaries up front in `docs/PLAN.md`/chunk plan rather than splitting reactively after hitting the limit |
 | MCP server security (token auth + no public exposure) is easy to get wrong when deploying to cloud | Real security exposure if mis-configured during the bonus round | `services/mcp/server_base.py` centralizes auth so there is exactly one place to audit; README will document the exact deployment steps required (tunnel + auth) before the bonus round |

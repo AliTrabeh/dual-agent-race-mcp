@@ -12,7 +12,7 @@
 
 ## 2. Mapping the HW PDF's staged sanity checks onto the test suite
 
-The HW PDF's 4-stage sanity-check table (HW-F12) is implemented as parametrized integration tests, not as separate code paths:
+The HW PDF's 4-stage sanity-check table (HW-F12) is implemented as parametrized integration tests, not as separate code paths — see `tests/integration/test_staged_sanity_checks.py` (Chunk 9), parametrized over `[(2,2), (3,3), (3,2), (4,4), (4,3), (5,5)]`:
 
 | Stage | Grid | What the test asserts |
 |-------|------|--------------------------|

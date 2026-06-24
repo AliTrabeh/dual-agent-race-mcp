@@ -198,3 +198,22 @@ Doubles as the Prompt Engineering Log mandated by Guidelines PDF SG-U04 (prompt 
 - Confirmed real, visible CLI output before trusting the test suite's assertions about it — the FastMCP logging-noise issue would not have been caught by a unit test using a mocked SDK, only by actually running the command.
 
 **Next planned entry**: after Chunk 9 (suite-level test completion) or whichever chunk is approved next.
+
+---
+
+## Entry 10 — 2026-06-25 — Chunk 9: suite-level test completion
+
+**Prompt context/goal**: Between Chunk 8 and Chunk 9, the user manually tried the CLI themselves (confirmed it works — 6/6 Cop wins, totals 120/30, exactly matching the deterministic stub-LLM+heuristic prediction) and asked an exploratory question about adding a browser GUI. Per the "exploratory question" guidance, gave a short recommendation (feasible, SDK boundary already supports it cleanly, but it's explicitly optional per the HW PDF) and a tradeoff, without implementing anything, then deferred it until the required chunks (9–11) are finished, per the user's explicit choice. Also fixed a one-line accidental edit to `main.py` (stray `i want t` text prepended to the docstring, breaking the syntax) before re-verifying the CLI worked. Then proceeded to Chunk 9 (PRD-006): suite-level test completion.
+
+**What was done**:
+1. Implemented `tests/integration/test_staged_sanity_checks.py`, parametrized over all 6 grid sizes the HW PDF's sanity-check table names (`2×2`, `3×3`, `3×2`, `4×4`, `4×3`, `5×5`), asserting each completes without exception, produces the right number of sub-games, every outcome is valid, and totals stay within the bound formula derived in Chunk 5. Added a dedicated Stage-1 (2×2) test that builds explicit `MessageStore` instances (same pattern as Chunk 6's integration test) to assert the message pipeline is actually lossless on the smallest grid, not just "the match completed" — directly matching HW-F12's literal wording for Stage 1.
+2. Audited for coverage/lint gaps to close per PRD-006's scope — found none: coverage has been 100.00% since Chunk 6 and stayed there through Chunks 7/8, so this chunk's "suite-level completion" work was almost entirely the staged-sanity-check matrix itself rather than backfilling missed tests.
+3. Updated `docs/05_testing_strategy.md` §2 to point at the now-real `tests/integration/test_staged_sanity_checks.py` instead of describing it only as planned.
+4. Validated: 217/217 tests pass (7 new), 100% coverage maintained, 0 ruff warnings, new file 84 lines.
+5. Updated `docs/TODO.md` (Chunk 9 → done), `docs/01_requirements_matrix.md` (HW-F12 → ✅; SG-T01–T06 → ✅, reflecting that these were actually satisfied incrementally across every prior chunk, not just now), 7 PRD-catalog entries, and regenerated the catalog.
+
+**Key decisions / lessons learned**:
+- This chunk confirmed something worth naming explicitly: because every previous chunk insisted on hitting 100% coverage and 0 ruff warnings *before* moving on, Chunk 9's "catch-up" scope shrank to almost nothing — the discipline paid for itself rather than deferring cost to a big cleanup pass at the end.
+- Caught the user's accidental file edit before it could cause confusion later (a stray prepended string would have caused a `SyntaxError` on the next run) — flagged it plainly and fixed it as a one-line, surgical edit rather than rewriting the file.
+
+**Next planned entry**: after Chunk 10 (documentation finalization & submission packaging) or whichever chunk is approved next.

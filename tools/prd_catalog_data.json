@@ -4617,7 +4617,7 @@
     "acceptance": "The test passes deterministically with no dependency on a live external service (SG-T03).",
     "chunk": "varies",
     "test_method": "pytest unit or integration test",
-    "status": "Not Started"
+    "status": "Done"
   },
   {
     "category": "Test Case",
@@ -4628,7 +4628,7 @@
     "acceptance": "The test passes deterministically with no dependency on a live external service (SG-T03).",
     "chunk": "varies",
     "test_method": "pytest unit or integration test",
-    "status": "Not Started"
+    "status": "Done"
   },
   {
     "category": "Test Case",
@@ -4639,7 +4639,7 @@
     "acceptance": "The test passes deterministically with no dependency on a live external service (SG-T03).",
     "chunk": "varies",
     "test_method": "pytest unit or integration test",
-    "status": "Not Started"
+    "status": "Done"
   },
   {
     "category": "Test Case",
@@ -4650,7 +4650,7 @@
     "acceptance": "The test passes deterministically with no dependency on a live external service (SG-T03).",
     "chunk": "varies",
     "test_method": "pytest unit or integration test",
-    "status": "Not Started"
+    "status": "Done"
   },
   {
     "category": "Test Case",

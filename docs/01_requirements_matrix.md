@@ -65,7 +65,7 @@ HW6/
 | HW-F09 | Thief survival win condition | `services/race/race_state.py` | 5 | ✅ |
 | HW-F10 | Barriers (max 5, Cop-only, one-way) | `services/race/race_state.py`, `services/race/scoring.py` | 5 | ✅ |
 | HW-F11 | Scoring table (20/5, 10/5) | `services/race/scoring.py`, `config/setup.json` | 5,7 | ✅ |
-| HW-F12 | Staged sanity checks (2x2→3x3→4x4→5x5) | `docs/05_testing_strategy.md`, `tests/integration/` | 9 | ⬜ |
+| HW-F12 | Staged sanity checks (2x2→3x3→4x4→5x5) | `docs/05_testing_strategy.md`, `tests/integration/test_staged_sanity_checks.py` | 9 | ✅ (parametrized over 2x2/3x3/3x2/4x4/4x3/5x5, plus an explicit Stage-1 message-pipeline-lossless check) |
 | HW-F13 | Two independent MCP servers (Cop/Thief) | `services/mcp/server_a.py`, `server_b.py` | 3 | ✅ |
 | HW-F14 | FastMCP-based tool exposure | `services/mcp/server_base.py` | 3 | ✅ |
 | HW-F15 | LLM decoupled from MCP server; client = orchestrator | `sdk/sdk.py`, `services/agents/base_agent.py` | 4,6 | ✅ (`sdk/orchestrator.py` is the MCP client; servers remain LLM-free, verified by code structure) |
@@ -105,12 +105,12 @@ HW6/
 | SG-C12 | Multiprocessing/threading guidance | `services/mcp/` (I/O-bound → async/threading) | 3,6 | ✅ (MCP transport is async via FastMCP's native async Client/tool model, no multiprocessing needed) |
 | SG-C13 | Building-block component docs (I/O/Setup) | every class docstring | all | 🟨 (RaceState, ApiGatekeeper, GameConfig, GatekeptLLMClient, BaseAgent done; remaining classes land per-chunk) |
 | SG-C14 | ISO/IEC 25010 self-check | `docs/06_submission_checklist.md` | 11 | ⬜ |
-| SG-T01..T03 | TDD, test layout, mocking | `tests/unit/`, `tests/integration/`, `conftest.py` | 9 | ⬜ |
-| SG-T04 | ≥85% coverage | `pyproject.toml` coverage config | 9 | ⬜ |
-| SG-T05 | Edge case docs | `docs/05_testing_strategy.md` | 9 | ⬜ |
-| SG-T06 | Test result reporting | CI/test run logs | 9 | ⬜ |
+| SG-T01..T03 | TDD, test layout, mocking | `tests/unit/`, `tests/integration/`, `conftest.py` | 9 | ✅ (TDD followed every chunk; layout mirrors `src/`; zero tests depend on a live external service) |
+| SG-T04 | ≥85% coverage | `pyproject.toml` coverage config | 9 | ✅ (100.00% sustained across all 9 chunks) |
+| SG-T05 | Edge case docs | `docs/05_testing_strategy.md` | 9 | ✅ (edge-case register in §4 matches actual implemented tests) |
+| SG-T06 | Test result reporting | CI/test run logs | 9 | ✅ (each chunk's exact pass count/coverage/ruff result recorded in `docs/08_claude_work_log.md`) |
 | SG-T07 | Ruff zero warnings | `pyproject.toml` ruff config | 2 | ✅ |
-| SG-U01/U02 | `uv` only, no pip/requirements.txt | `pyproject.toml`, `uv.lock` | 0 | 🟨 (pyproject.toml correct; `uv.lock` pending `uv` install) |
+| SG-U01/U02 | `uv` only, no pip/requirements.txt | `pyproject.toml`, `uv.lock` | 0 | ✅ (`uv` installed, `uv.lock` committed, `uv run python -m hw6_race.main` confirmed working as of Chunk 9) |
 | SG-U03 | Git workflow (branches, PRs, tags) | process, not a file — tracked in `docs/06_submission_checklist.md` | all | ⬜ |
 | SG-U04 | Prompt Engineering Log | `docs/08_claude_work_log.md` (doubles as the log) | 1 | 🟨 |
 | PROJ-R01 | 150-physical-line cap on every Python file (user-specified, stricter than SG-C01) | `tests/test_line_limits.py`, `docs/PLAN.md` ADR-006 | all | ✅ |

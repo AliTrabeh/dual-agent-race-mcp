@@ -58,7 +58,7 @@ HW6/
 | HW-F02 | NL decode + inference + move translation | `services/agents/`, PRD-003 | 4,5 | ✅ (full pipeline runs every turn via `sdk/orchestrator.py`'s `take_turn`; HeuristicStrategy does not yet *act* on inferred beliefs — explicitly acceptable per HW-F03) |
 | HW-F03 | Success = communication ability, not win-rate | PRD-003 acceptance criteria, `docs/05_testing_strategy.md` | 5 | ⬜ |
 | HW-F04 | Sub-game = ≤25 moves, alternating, Thief first | `services/race/race_state.py`, `services/race/race_engine.py` | 5,6 | ✅ (wired to real agents via `sdk/orchestrator.py`) |
-| HW-F05 | Game = 6 sub-games, aggregated results | `services/race/race_engine.py`, `services/reporting/` | 6,7 | 🟨 (aggregation done and wired end-to-end; JSON reporting is Chunk 7) |
+| HW-F05 | Game = 6 sub-games, aggregated results | `services/race/race_engine.py`, `services/reporting/` | 6,7 | ✅ (aggregation wired end-to-end; `RunLogger`/`InternalGameReport` build the final JSON) |
 | HW-F06 | Configurable grid size, no hard-coding | `config/setup.json`, `shared/config.py` | 2 | ✅ |
 | HW-F07 | Start positions, 4-direction movement, full grid state | `services/race/race_state.py` | 5 | ✅ |
 | HW-F08 | Cop capture win condition | `services/race/race_state.py` | 5 | ✅ |
@@ -74,14 +74,14 @@ HW6/
 | HW-F18 | Exactly 2 URLs per group (Cop, Thief) | `config/setup.json`, `docs/PRD.md` | 3 | 🟨 (config keys exist; real cloud URLs assigned in Chunk 10) |
 | HW-F19 | 3 LLM connectivity architectures, pluggable | `services/agents/llm_client.py` (LLMClient interface) | 4 | 🟨 (interface + Gatekeeper routing proven swappable in tests; real provider/Ollama/tunnel deployment is Chunk 10) |
 | HW-F20 | Optional Tabular Q-Learning | `services/agents/` strategy module, `docs/PRD_q_learning.md` | 5 (stretch) | ⬜ |
-| HW-F21 | Auto email JSON report via Gmail API | `services/reporting/run_logger.py` + mailer | 7 | ⬜ |
-| HW-F22 | Technical Loss handling + JSON-only email body | `services/reporting/`, PRD-005 | 7 | ⬜ |
-| HW-F23 | Internal Game JSON schema | `services/reporting/schemas.py` | 7 | ⬜ |
-| HW-F24 | Inter-Group Bonus Game JSON schema | `services/reporting/schemas.py` | 7 | ⬜ |
+| HW-F21 | Auto email JSON report via Gmail API | `services/reporting/run_logger.py` + mailer | 7 | 🟨 (`ReportMailer` dispatch + JSON-only body done and tested with a mocked send_fn; real Gmail OAuth credentials are user-supplied, HW-Q05) |
+| HW-F22 | Technical Loss handling + JSON-only email body | `services/reporting/`, PRD-005 | 7 | 🟨 (detection + JSON-only body done; rerun-within-a-live-match wiring is a flagged known limitation, see `docs/07_risks_and_open_questions.md`) |
+| HW-F23 | Internal Game JSON schema | `services/reporting/schemas.py` | 7 | ✅ (verified field-for-field against the literal HW PDF example) |
+| HW-F24 | Inter-Group Bonus Game JSON schema | `services/reporting/schemas.py` | 7 | ✅ (verified field-for-field against the literal HW PDF example) |
 | HW-F25 | Mandatory config file, all params centralized | `config/setup.json`, `shared/config.py` | 2 | ✅ |
 | HW-F26 | GitHub repo + scientific README (Dec-POMDP tuple etc.) | root `README.md` | 10 | ⬜ |
 | HW-F27 | Inter-group bonus game execution (external) | PRD-007, `docs/06_submission_checklist.md` | 11 (manual) | ⬜ |
-| HW-F28 | Bonus scoring rules | `services/reporting/`, PRD-007 | 7 | ⬜ |
+| HW-F28 | Bonus scoring rules | `services/reporting/`, PRD-007 | 7 | ✅ (`compute_bonus_claim` implements winner/loser/tie; "average across pairings" is an external, multi-match aggregation the user computes, not single-report logic) |
 | HW-F29 | 8-stage dev priority order | `docs/04_implementation_chunks.md` (chunk plan follows this order) | all | 🟨 |
 | HW-N01..N06 | NL freedom, client/server split, gradual rollout, 3 LLM archs, security/automation, team mgmt | architecture docs, `docs/03_architecture.md` | 3,4,6 | 🟨 (NL freedom + client/server split proven end-to-end this chunk; cloud rollout/real LLM archs/OAuth automation remain Chunk 10) |
 | SG-P01 | No code before docs approved ("vibe coding" rule) | this entire Phase 0/1 deliverable | 0,1 | ✅ |

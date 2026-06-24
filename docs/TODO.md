@@ -40,7 +40,7 @@
 | 4 | Agent abstraction layer | done | §Chunk 4 — `services/agents/{models,llm_client,base_agent,cop_agent,thief_agent,strategies/{base,heuristic_strategy}}.py` implemented + tested (112/112 tests, 99.20% cov, 0 ruff warnings, all files ≤88 lines) |
 | 5 | Dual-agent race mechanism | done | §Chunk 5 — `services/race/{exceptions,models,race_state,race_engine,scoring}.py` implemented + tested (147/147 tests, 99.39% cov, 0 ruff warnings, all files ≤90 lines). Q-Learning stretch goal not attempted this pass. |
 | 6 | Controller / orchestrator / game loop | done | §Chunk 6 — `sdk/{orchestrator,wiring}.py` + rewritten `sdk/sdk.py` implemented + tested (173/173 tests, 100% cov, 0 ruff warnings, all files ≤111 lines). Real end-to-end run verified manually (6/6 sub-games, totals match proven bound). Technical Loss containment implemented; full rerun-to-6 bookkeeping deferred to Chunk 7. |
-| 7 | Logging, JSON protocol, run history, email | not-started | §Chunk 7 |
+| 7 | Logging, JSON protocol, run history, email | done | §Chunk 7 — `services/reporting/{schemas,bonus_report,technical_loss,run_logger,mailer}.py` implemented + tested (203/203 tests, 100% cov, 0 ruff warnings, all files ≤77 lines). Known limitation: `resolve_technical_losses` not yet wired into a single live match — see `docs/07_risks_and_open_questions.md`. |
 | 8 | CLI interface | not-started | §Chunk 8 |
 | 9 | Tests (unit + integration, coverage gate) | not-started | §Chunk 9 |
 | 10 | Documentation finalization & submission packaging | not-started | §Chunk 10 |

@@ -1680,7 +1680,7 @@
     "acceptance": "`services/reporting/schemas.py` serializes `group_name` with the exact key name/type from the HW PDF.",
     "chunk": "7",
     "test_method": "Schema validation unit test against the literal PDF example",
-    "status": "Not Started"
+    "status": "Done"
   },
   {
     "category": "Reporting Schema Field",
@@ -1691,7 +1691,7 @@
     "acceptance": "`services/reporting/schemas.py` serializes `students` with the exact key name/type from the HW PDF.",
     "chunk": "7",
     "test_method": "Schema validation unit test against the literal PDF example",
-    "status": "Not Started"
+    "status": "Done"
   },
   {
     "category": "Reporting Schema Field",
@@ -1702,7 +1702,7 @@
     "acceptance": "`services/reporting/schemas.py` serializes `github_repo` with the exact key name/type from the HW PDF.",
     "chunk": "7",
     "test_method": "Schema validation unit test against the literal PDF example",
-    "status": "Not Started"
+    "status": "Done"
   },
   {
     "category": "Reporting Schema Field",
@@ -1713,7 +1713,7 @@
     "acceptance": "`services/reporting/schemas.py` serializes `cop_mcp_url` with the exact key name/type from the HW PDF.",
     "chunk": "7",
     "test_method": "Schema validation unit test against the literal PDF example",
-    "status": "Not Started"
+    "status": "Done"
   },
   {
     "category": "Reporting Schema Field",
@@ -1724,7 +1724,7 @@
     "acceptance": "`services/reporting/schemas.py` serializes `thief_mcp_url` with the exact key name/type from the HW PDF.",
     "chunk": "7",
     "test_method": "Schema validation unit test against the literal PDF example",
-    "status": "Not Started"
+    "status": "Done"
   },
   {
     "category": "Reporting Schema Field",
@@ -1735,7 +1735,7 @@
     "acceptance": "`services/reporting/schemas.py` serializes `timezone` with the exact key name/type from the HW PDF.",
     "chunk": "7",
     "test_method": "Schema validation unit test against the literal PDF example",
-    "status": "Not Started"
+    "status": "Done"
   },
   {
     "category": "Reporting Schema Field",
@@ -1746,7 +1746,7 @@
     "acceptance": "`services/reporting/schemas.py` serializes `sub_games` with the exact key name/type from the HW PDF.",
     "chunk": "7",
     "test_method": "Schema validation unit test against the literal PDF example",
-    "status": "Not Started"
+    "status": "Done"
   },
   {
     "category": "Reporting Schema Field",
@@ -1757,7 +1757,7 @@
     "acceptance": "`services/reporting/schemas.py` serializes `totals.cop` with the exact key name/type from the HW PDF.",
     "chunk": "7",
     "test_method": "Schema validation unit test against the literal PDF example",
-    "status": "Not Started"
+    "status": "Done"
   },
   {
     "category": "Reporting Schema Field",
@@ -1768,7 +1768,7 @@
     "acceptance": "`services/reporting/schemas.py` serializes `totals.thief` with the exact key name/type from the HW PDF.",
     "chunk": "7",
     "test_method": "Schema validation unit test against the literal PDF example",
-    "status": "Not Started"
+    "status": "Done"
   },
   {
     "category": "Reporting Schema Field",
@@ -1779,7 +1779,7 @@
     "acceptance": "`services/reporting/schemas.py` serializes `report_type` matching the HW PDF's bonus example.",
     "chunk": "7",
     "test_method": "Schema validation unit test against the literal PDF example",
-    "status": "Not Started"
+    "status": "Done"
   },
   {
     "category": "Reporting Schema Field",
@@ -1790,7 +1790,7 @@
     "acceptance": "`services/reporting/schemas.py` serializes `groups.group_1` matching the HW PDF's bonus example.",
     "chunk": "7",
     "test_method": "Schema validation unit test against the literal PDF example",
-    "status": "Not Started"
+    "status": "Done"
   },
   {
     "category": "Reporting Schema Field",
@@ -1801,7 +1801,7 @@
     "acceptance": "`services/reporting/schemas.py` serializes `groups.group_2` matching the HW PDF's bonus example.",
     "chunk": "7",
     "test_method": "Schema validation unit test against the literal PDF example",
-    "status": "Not Started"
+    "status": "Done"
   },
   {
     "category": "Reporting Schema Field",
@@ -1812,7 +1812,7 @@
     "acceptance": "`services/reporting/schemas.py` serializes `github_repo_group_1` matching the HW PDF's bonus example.",
     "chunk": "7",
     "test_method": "Schema validation unit test against the literal PDF example",
-    "status": "Not Started"
+    "status": "Done"
   },
   {
     "category": "Reporting Schema Field",
@@ -1823,7 +1823,7 @@
     "acceptance": "`services/reporting/schemas.py` serializes `github_repo_group_2` matching the HW PDF's bonus example.",
     "chunk": "7",
     "test_method": "Schema validation unit test against the literal PDF example",
-    "status": "Not Started"
+    "status": "Done"
   },
   {
     "category": "Reporting Schema Field",
@@ -1834,7 +1834,7 @@
     "acceptance": "`services/reporting/schemas.py` serializes `mcp_url_group_1_cop` matching the HW PDF's bonus example.",
     "chunk": "7",
     "test_method": "Schema validation unit test against the literal PDF example",
-    "status": "Not Started"
+    "status": "Done"
   },
   {
     "category": "Reporting Schema Field",
@@ -1845,7 +1845,7 @@
     "acceptance": "`services/reporting/schemas.py` serializes `mcp_url_group_1_thief` matching the HW PDF's bonus example.",
     "chunk": "7",
     "test_method": "Schema validation unit test against the literal PDF example",
-    "status": "Not Started"
+    "status": "Done"
   },
   {
     "category": "Reporting Schema Field",
@@ -1856,7 +1856,7 @@
     "acceptance": "`services/reporting/schemas.py` serializes `mcp_url_group_2_cop` matching the HW PDF's bonus example.",
     "chunk": "7",
     "test_method": "Schema validation unit test against the literal PDF example",
-    "status": "Not Started"
+    "status": "Done"
   },
   {
     "category": "Reporting Schema Field",
@@ -1867,7 +1867,7 @@
     "acceptance": "`services/reporting/schemas.py` serializes `mcp_url_group_2_thief` matching the HW PDF's bonus example.",
     "chunk": "7",
     "test_method": "Schema validation unit test against the literal PDF example",
-    "status": "Not Started"
+    "status": "Done"
   },
   {
     "category": "Reporting Schema Field",
@@ -1878,7 +1878,7 @@
     "acceptance": "`services/reporting/schemas.py` serializes `timezone` matching the HW PDF's bonus example.",
     "chunk": "7",
     "test_method": "Schema validation unit test against the literal PDF example",
-    "status": "Not Started"
+    "status": "Done"
   },
   {
     "category": "Reporting Schema Field",
@@ -1889,7 +1889,7 @@
     "acceptance": "`services/reporting/schemas.py` serializes `students_group_1` matching the HW PDF's bonus example.",
     "chunk": "7",
     "test_method": "Schema validation unit test against the literal PDF example",
-    "status": "Not Started"
+    "status": "Done"
   },
   {
     "category": "Reporting Schema Field",
@@ -1900,7 +1900,7 @@
     "acceptance": "`services/reporting/schemas.py` serializes `students_group_2` matching the HW PDF's bonus example.",
     "chunk": "7",
     "test_method": "Schema validation unit test against the literal PDF example",
-    "status": "Not Started"
+    "status": "Done"
   },
   {
     "category": "Reporting Schema Field",
@@ -1911,7 +1911,7 @@
     "acceptance": "`services/reporting/schemas.py` serializes `sub_games` matching the HW PDF's bonus example.",
     "chunk": "7",
     "test_method": "Schema validation unit test against the literal PDF example",
-    "status": "Not Started"
+    "status": "Done"
   },
   {
     "category": "Reporting Schema Field",
@@ -1922,7 +1922,7 @@
     "acceptance": "`services/reporting/schemas.py` serializes `totals_by_group` matching the HW PDF's bonus example.",
     "chunk": "7",
     "test_method": "Schema validation unit test against the literal PDF example",
-    "status": "Not Started"
+    "status": "Done"
   },
   {
     "category": "Reporting Schema Field",
@@ -1933,7 +1933,7 @@
     "acceptance": "`services/reporting/schemas.py` serializes `bonus_claim` matching the HW PDF's bonus example.",
     "chunk": "7",
     "test_method": "Schema validation unit test against the literal PDF example",
-    "status": "Not Started"
+    "status": "Done"
   },
   {
     "category": "Reporting Schema Field",
@@ -1944,7 +1944,7 @@
     "acceptance": "`services/reporting/schemas.py` serializes `mutual_agreement` matching the HW PDF's bonus example.",
     "chunk": "7",
     "test_method": "Schema validation unit test against the literal PDF example",
-    "status": "Not Started"
+    "status": "Done"
   },
   {
     "category": "CLI Behavior",
@@ -3385,7 +3385,7 @@
     "acceptance": "Bonus scoring logic and the user's external bonus-round process both honor: Highest cumulative bonus-game scorer in a pairing receives 10 bonus points (HW-F28).",
     "chunk": "7,11 (partly external)",
     "test_method": "Unit test on bonus scoring logic plus manual process compliance",
-    "status": "Not Started"
+    "status": "Done"
   },
   {
     "category": "Bonus Round Rule",
@@ -3396,7 +3396,7 @@
     "acceptance": "Bonus scoring logic and the user's external bonus-round process both honor: The losing side of a pairing receives 7 bonus points (HW-F28).",
     "chunk": "7,11 (partly external)",
     "test_method": "Unit test on bonus scoring logic plus manual process compliance",
-    "status": "Not Started"
+    "status": "Done"
   },
   {
     "category": "Bonus Round Rule",
@@ -3407,7 +3407,7 @@
     "acceptance": "Bonus scoring logic and the user's external bonus-round process both honor: An exact tie awards 5 bonus points to each side (HW-F28).",
     "chunk": "7,11 (partly external)",
     "test_method": "Unit test on bonus scoring logic plus manual process compliance",
-    "status": "Not Started"
+    "status": "Done"
   },
   {
     "category": "Bonus Round Rule",
@@ -3803,7 +3803,7 @@
     "acceptance": "`RunLogger`'s docstring states Input/Output/Setup and it has an independent, focused test file.",
     "chunk": "varies",
     "test_method": "Code review of docstring plus presence of a dedicated test file",
-    "status": "Not Started"
+    "status": "Done"
   },
   {
     "category": "Component Design (Building Block)",
@@ -3814,7 +3814,7 @@
     "acceptance": "`TechnicalLossHandler`'s docstring states Input/Output/Setup and it has an independent, focused test file.",
     "chunk": "varies",
     "test_method": "Code review of docstring plus presence of a dedicated test file",
-    "status": "Not Started"
+    "status": "Done"
   },
   {
     "category": "Component Design (Building Block)",
@@ -3825,7 +3825,7 @@
     "acceptance": "`Mailer`'s docstring states Input/Output/Setup and it has an independent, focused test file.",
     "chunk": "varies",
     "test_method": "Code review of docstring plus presence of a dedicated test file",
-    "status": "Not Started"
+    "status": "Done"
   },
   {
     "category": "Component Design (Building Block)",
@@ -4452,7 +4452,7 @@
     "acceptance": "The test passes deterministically with no dependency on a live external service (SG-T03).",
     "chunk": "varies",
     "test_method": "pytest unit or integration test",
-    "status": "Not Started"
+    "status": "Done"
   },
   {
     "category": "Test Case",
@@ -4463,7 +4463,7 @@
     "acceptance": "The test passes deterministically with no dependency on a live external service (SG-T03).",
     "chunk": "varies",
     "test_method": "pytest unit or integration test",
-    "status": "Not Started"
+    "status": "Done"
   },
   {
     "category": "Test Case",
@@ -4474,7 +4474,7 @@
     "acceptance": "The test passes deterministically with no dependency on a live external service (SG-T03).",
     "chunk": "varies",
     "test_method": "pytest unit or integration test",
-    "status": "Not Started"
+    "status": "Done"
   },
   {
     "category": "Test Case",
@@ -4485,7 +4485,7 @@
     "acceptance": "The test passes deterministically with no dependency on a live external service (SG-T03).",
     "chunk": "varies",
     "test_method": "pytest unit or integration test",
-    "status": "Not Started"
+    "status": "Done"
   },
   {
     "category": "Test Case",
@@ -4496,7 +4496,7 @@
     "acceptance": "The test passes deterministically with no dependency on a live external service (SG-T03).",
     "chunk": "varies",
     "test_method": "pytest unit or integration test",
-    "status": "Not Started"
+    "status": "Done"
   },
   {
     "category": "Test Case",
@@ -4507,7 +4507,7 @@
     "acceptance": "The test passes deterministically with no dependency on a live external service (SG-T03).",
     "chunk": "varies",
     "test_method": "pytest unit or integration test",
-    "status": "Not Started"
+    "status": "Done"
   },
   {
     "category": "Test Case",
@@ -4518,7 +4518,7 @@
     "acceptance": "The test passes deterministically with no dependency on a live external service (SG-T03).",
     "chunk": "varies",
     "test_method": "pytest unit or integration test",
-    "status": "Not Started"
+    "status": "Done"
   },
   {
     "category": "Test Case",
@@ -4529,7 +4529,7 @@
     "acceptance": "The test passes deterministically with no dependency on a live external service (SG-T03).",
     "chunk": "varies",
     "test_method": "pytest unit or integration test",
-    "status": "Not Started"
+    "status": "Done"
   },
   {
     "category": "Test Case",
@@ -4540,7 +4540,7 @@
     "acceptance": "The test passes deterministically with no dependency on a live external service (SG-T03).",
     "chunk": "varies",
     "test_method": "pytest unit or integration test",
-    "status": "Not Started"
+    "status": "Done"
   },
   {
     "category": "Test Case",

@@ -85,7 +85,7 @@ uv run pytest tests/ --cov=src --cov-report=term-missing   # with coverage (gate
 uv run ruff check src/ tests/                              # lint gate (must report 0 warnings)
 ```
 
-As of this commit: **173/173 tests pass, 100% coverage, 0 ruff warnings**. A full local match (`Hw6RaceSDK().run_local_match()`) now runs genuinely end-to-end (config loader, version tracking, API Gatekeeper, import-safety checks, and the project-wide 150-line file check). Game logic is not yet present, so these numbers will shift as chunks 3–9 land — see `docs/05_testing_strategy.md`.
+As of this commit: **203/203 tests pass, 100% coverage, 0 ruff warnings**. A full local match (`Hw6RaceSDK().run_local_match()`) now runs genuinely end-to-end, and its `GameResult` can be turned into a submission-schema-exact Internal Game JSON report and emailed (with a mocked send function in tests; real Gmail OAuth credentials are user-supplied, never fabricated) (config loader, version tracking, API Gatekeeper, import-safety checks, and the project-wide 150-line file check). Game logic is not yet present, so these numbers will shift as chunks 3–9 land — see `docs/05_testing_strategy.md`.
 
 **Project rule**: every Python file in this repo (`src/`, `tests/`, `tools/`) is capped at 150 *physical* lines (blank lines and comments included) — stricter than the submission guidelines' 150-*logical*-line cap. Enforced by `tests/test_line_limits.py`, run as part of the normal test suite. See `docs/PLAN.md` ADR-006.
 
@@ -140,7 +140,7 @@ This repository is currently at the end of **Phase 0/1**: full requirement extra
 | 4 | Agent abstraction layer | ✅ done (LLMClient + DecisionStrategy interfaces, HeuristicStrategy, BaseAgent/CopAgent/ThiefAgent) |
 | 5 | Dual-agent race mechanism | ✅ done (grid, movement, barriers, capture/survival, scoring; Q-Learning stretch not attempted) |
 | 6 | Controller / orchestrator / game loop | ✅ done (`Hw6RaceSDK.run_local_match()` verified end-to-end; Technical Loss containment in place, full rerun-to-6 is Chunk 7) |
-| 7 | Logging, JSON protocol, run history, email | ⬜ not started |
+| 7 | Logging, JSON protocol, run history, email | ✅ done (schemas, technical-loss algorithm, run logger, mailer — all tested; live-match rerun wiring flagged as a known limitation) |
 | 8 | CLI interface | 🟨 stub exists, delegates to SDK, SDK not yet implemented |
 | 9 | Tests (suite-level completion, coverage gate) | 🟨 ongoing per-chunk; suite-level pass pending chunks 3–8 |
 | 10 | Documentation finalization & submission packaging | 🟨 this README is a living document, finalized in chunk 10 |

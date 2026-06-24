@@ -261,3 +261,22 @@ Doubles as the Prompt Engineering Log mandated by Guidelines PDF SG-U04 (prompt 
 - Treated the ISO 25010 self-check as a real deliverable rather than a checkbox — each row in the new §H table cites a specific, already-existing piece of evidence (a test, a log entry, a prior chunk's finding) rather than a bare assertion, consistent with how every other claim in this project's docs has been handled.
 
 **Project status at the end of Chunk 11**: all 11 originally-planned chunks are complete. The local pipeline runs genuinely end-to-end with 100% test coverage and 0 lint warnings, verified by two independent fresh clones. Remaining work — real cloud deployment, real Gmail OAuth, the inter-group bonus round, and optionally a GUI or Q-Learning strategy — all require either the user's own credentials/accounts or an external second group, and are documented as concrete next actions rather than silently incomplete.
+
+---
+
+## Entry 13 — 2026-06-26 — Wiring up a real LLM (Anthropic)
+
+**Prompt context/goal**: With all 11 planned chunks done, the user asked what's next; given a choice of next steps (real LLM, cloud deploy, GUI, Gmail OAuth, bonus round, or submit as-is), they chose to wire up a real LLM first, leaning toward Claude since they already have a Claude.ai subscription. Clarified upfront — without being asked — that a claude.ai/ChatGPT *subscription* is not the same as *API access* (separate, pay-per-token billing at console.anthropic.com), and explicitly told the user not to paste the API key into the chat; they set it in `.env` themselves.
+
+**What was done**:
+1. Added `anthropic` and `python-dotenv` as real dependencies via `uv add` (not hand-edited into `pyproject.toml`), which also regenerated `uv.lock` correctly.
+2. Implemented `services/agents/llm_providers.py::AnthropicCompleteFn` — a small, dependency-injectable callable (`client` param defaults to a real `anthropic.Anthropic` instance, but tests inject a fake) matching the existing `complete_fn` shape `GatekeptLLMClient` already expects, so no change was needed to the agent/Gatekeeper layers at all — exactly the pluggability HW-F19 calls for, demonstrated rather than just claimed.
+3. Added `sdk/wiring.py::build_llm_client_from_env`, the one place that decides real-vs-stub: reads `LLM_PROVIDER`/`LLM_API_KEY`/`LLM_MODEL` from `os.environ`, builds a real `AnthropicCompleteFn`-backed client if both provider and key are present, and falls back to the existing safe stub otherwise — never raises, never makes an unauthorized call. Wired `Hw6RaceSDK.__init__` to call this instead of the old hard-coded stub-only builder.
+4. Added `load_dotenv()` at the top of `main.py` (the CLI entry point) so `.env` is read automatically — deliberately did *not* add this to the SDK itself, keeping "read environment/bootstrap" a CLI-layer concern and the SDK importable/testable without any implicit file I/O.
+5. Updated `.env-example` to document Anthropic as the implemented default provider, with a clear comment explaining the stub fallback behavior.
+6. Wrote 10 new tests: `test_llm_providers.py` (response stripping, correct message shape, configured model passed through, default-to-haiku) using a fully fake injected Anthropic client — no real network call anywhere in the suite — and 3 new `test_wiring.py` cases for `build_llm_client_from_env` (unset → stub, provider-without-key → stub, fully configured → real `AnthropicCompleteFn` with the right model).
+7. Validated: 226/226 tests pass, 100% coverage, 0 ruff warnings, all new/changed files well under the 150-line cap (largest: `wiring.py` at 79 lines).
+
+**Key decisions / lessons learned**:
+- Never asked for or touched a real API key directly — the user was told explicitly to manage `.env` themselves, and the integration was built and fully tested via dependency injection without ever needing a real key to exist during development.
+- Confirmed the architecture's pluggability claim wasn't just aspirational: adding a second provider required exactly one new small file and one new branch in one function, with zero changes to `BaseAgent`, `CopAgent`/`ThiefAgent`, `ApiGatekeeper`, or any race/MCP code.

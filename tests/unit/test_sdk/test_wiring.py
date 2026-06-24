@@ -49,3 +49,39 @@ def test_build_clients_returns_two_independently_bound_clients() -> None:
     auth_manager = wiring.build_auth_manager()
     cop_client, thief_client = wiring.build_clients(auth_manager)
     assert cop_client is not thief_client
+
+
+def test_build_llm_client_from_env_falls_back_to_stub_when_unset(
+    gatekeeper, monkeypatch
+) -> None:
+    monkeypatch.delenv("LLM_PROVIDER", raising=False)
+    monkeypatch.delenv("LLM_API_KEY", raising=False)
+
+    client = wiring.build_llm_client_from_env(gatekeeper)
+
+    assert client.generate("Describe your situation") == "no comment"
+
+
+def test_build_llm_client_from_env_falls_back_when_provider_set_but_no_key(
+    gatekeeper, monkeypatch
+) -> None:
+    monkeypatch.setenv("LLM_PROVIDER", "anthropic")
+    monkeypatch.delenv("LLM_API_KEY", raising=False)
+
+    client = wiring.build_llm_client_from_env(gatekeeper)
+
+    assert client.generate("Describe your situation") == "no comment"
+
+
+def test_build_llm_client_from_env_builds_anthropic_client_when_configured(
+    gatekeeper, monkeypatch
+) -> None:
+    monkeypatch.setenv("LLM_PROVIDER", "anthropic")
+    monkeypatch.setenv("LLM_API_KEY", "fake-key-for-construction-only")
+    monkeypatch.setenv("LLM_MODEL", "claude-sonnet-4-6")
+
+    client = wiring.build_llm_client_from_env(gatekeeper)
+
+    assert isinstance(client, wiring.GatekeptLLMClient)
+    assert isinstance(client._complete_fn, wiring.AnthropicCompleteFn)
+    assert client._complete_fn._model == "claude-sonnet-4-6"

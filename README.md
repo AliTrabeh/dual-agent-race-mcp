@@ -63,7 +63,7 @@ cp .env-example .env     # then fill in real values — see below
 
 Required `.env` values (see `.env-example` for the full list and inline documentation) — **only needed if you want real LLM-driven agents or real email dispatch**; the default `uv run python -m hw6_race.main` works with zero `.env` configuration, using a safe no-network LLM stub:
 
-- `LLM_API_KEY` / `LLM_PROVIDER` / `LLM_MODEL` — credentials for whichever of the 3 supported LLM-connectivity architectures you choose (public cloud API key, local Ollama + tunnel, or the hybrid local-Ollama/cloud-MCP-server setup — see [§2](#2-the-orchestration-challenge-theoretical-discussion) and `docs/03_architecture.md` §3).
+- `LLM_API_KEY` / `LLM_PROVIDER` / `LLM_MODEL` — credentials for a real LLM backend. **Currently implemented: `LLM_PROVIDER=anthropic`** (`services/agents/llm_providers.py::AnthropicCompleteFn`), good default model `claude-haiku-4-5`. If unset, unrecognized, or missing a key, `sdk/wiring.py::build_llm_client_from_env` automatically falls back to the safe no-network stub — the system never makes an unauthorized API call. Get a key at console.anthropic.com (a paid API key, separate from a claude.ai subscription).
 - `MCP_COP_AUTH_TOKEN` / `MCP_THIEF_AUTH_TOKEN` — auth tokens for the two MCP servers (only relevant once deployed to the cloud — see [§8](#8-deployment-guide-local--cloud--inter-group-bonus)).
 - `GMAIL_OAUTH_CLIENT_SECRET_PATH` / `GMAIL_OAUTH_TOKEN_PATH` — Google API OAuth credentials for the automated end-of-match report email. **Must be real, user-supplied credentials** — see `docs/07_risks_and_open_questions.md` (HW-Q05). Never a stored password (SG-C09).
 
@@ -112,12 +112,14 @@ Or call the SDK directly from Python:
 ```python
 from hw6_race.sdk import Hw6RaceSDK
 
-sdk = Hw6RaceSDK()              # uses config/setup.json + a safe no-network LLM stub by default
+sdk = Hw6RaceSDK()              # uses config/setup.json; real Anthropic backend if .env is configured, else a safe stub
 result = sdk.run_local_match()  # runs 6 sub-games end-to-end, returns a GameResult
 print(result.total_cop_points, result.total_thief_points)
 ```
 
-A full run: starts both MCP servers in-process, runs 6 sub-games to completion via real agent/MCP turns (each turn drains the opponent's inbox, interprets it, composes a new message, sends it through the agent's own MCP server, relays it to the opponent's server, then decides and applies a move), logs a human-readable per-turn trace, writes the result to `results/last_match_result.json`, and exits non-zero if any sub-game ended in a Technical Loss. JSON-schema reporting (`InternalGameReport`) and auto-email dispatch (`ReportMailer`) exist and are tested but not yet wired into the CLI's default output path — see `docs/07_risks_and_open_questions.md` for the exact known limitation. To use a real LLM provider instead of the safe default stub, pass `Hw6RaceSDK(llm_client=...)` with your own `LLMClient` implementation.
+A full run: starts both MCP servers in-process, runs 6 sub-games to completion via real agent/MCP turns (each turn drains the opponent's inbox, interprets it, composes a new message, sends it through the agent's own MCP server, relays it to the opponent's server, then decides and applies a move), logs a human-readable per-turn trace, writes the result to `results/last_match_result.json`, and exits non-zero if any sub-game ended in a Technical Loss. JSON-schema reporting (`InternalGameReport`) and auto-email dispatch (`ReportMailer`) exist and are tested but not yet wired into the CLI's default output path — see `docs/07_risks_and_open_questions.md` for the exact known limitation.
+
+**Using a real LLM**: copy `.env-example` to `.env`, set `LLM_PROVIDER=anthropic` and a real `LLM_API_KEY` (from console.anthropic.com — separate from a claude.ai subscription), then just run `uv run python -m hw6_race.main` as normal — `main.py` loads `.env` automatically, and `Hw6RaceSDK` picks up the real backend with no other code change. To use a different provider, pass `Hw6RaceSDK(llm_client=...)` with your own `LLMClient` implementation (see `services/agents/llm_client.py`).
 
 ## 7. Running Tests
 

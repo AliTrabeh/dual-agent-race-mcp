@@ -19,10 +19,12 @@ class Hw6RaceSDK:
     """Facade over the race engine, MCP layer, agents, and reporting.
 
     Input: a GameConfig and an optional LLMClient (Setup data — defaults to a
-    safe, no-network stub if omitted, never a real API call). Output: a
-    GameResult from run_local_match(). Single Responsibility: orchestration
-    only — no rule logic, transport logic, or reporting logic is duplicated
-    here; all of it is delegated to services/ and sdk/orchestrator.py.
+    real provider client if `LLM_PROVIDER`/`LLM_API_KEY` are set in the
+    environment, else a safe no-network stub; never an unauthorized API
+    call). Output: a GameResult from run_local_match(). Single
+    Responsibility: orchestration only — no rule logic, transport logic, or
+    reporting logic is duplicated here; all of it is delegated to services/
+    and sdk/orchestrator.py.
     """
 
     def __init__(
@@ -36,7 +38,7 @@ class Hw6RaceSDK:
         else:
             rate_limits = RateLimitConfig.from_file(DEFAULT_RATE_LIMITS_PATH)
             gatekeeper = ApiGatekeeper(rate_limits, service="llm")
-            self._llm_client = wiring.build_default_llm_client(gatekeeper)
+            self._llm_client = wiring.build_llm_client_from_env(gatekeeper)
 
     @property
     def config(self) -> GameConfig:

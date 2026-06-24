@@ -9,6 +9,8 @@ import logging
 import sys
 from pathlib import Path
 
+from dotenv import load_dotenv
+
 from hw6_race.constants import DEFAULT_CONFIG_PATH, GameOutcome
 from hw6_race.sdk import Hw6RaceSDK
 from hw6_race.services.race.models import GameResult
@@ -17,6 +19,8 @@ from hw6_race.shared.config import ConfigError, load_config
 from hw6_race.shared.version import get_version
 
 DEFAULT_OUTPUT_DIR = "results"
+
+load_dotenv()  # populates LLM_PROVIDER/LLM_API_KEY/etc. from .env, if present
 
 
 def build_arg_parser() -> argparse.ArgumentParser:

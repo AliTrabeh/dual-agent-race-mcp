@@ -1,14 +1,18 @@
 """Constructs agents, MCP servers, and MCP clients for a local match (Chunk 6).
 
 The default LLM backend is a deterministic, no-network stub — this project
-never makes a real API call unless the caller explicitly supplies a real
-LLMClient (HW-F19). Swapping in a real provider requires no change here beyond
-the constructor argument, proving the architecture's pluggability.
+never makes a real API call unless real credentials are explicitly present
+in the environment (HW-F19). `build_llm_client_from_env` is the one place
+that decision is made; swapping providers requires no change anywhere else.
 """
+
+import logging
+import os
 
 from hw6_race.constants import AgentRole
 from hw6_race.services.agents.cop_agent import CopAgent
 from hw6_race.services.agents.llm_client import GatekeptLLMClient, LLMClient
+from hw6_race.services.agents.llm_providers import AnthropicCompleteFn
 from hw6_race.services.agents.strategies.heuristic_strategy import HeuristicStrategy
 from hw6_race.services.agents.thief_agent import ThiefAgent
 from hw6_race.services.mcp.auth import TokenAuthManager
@@ -19,6 +23,8 @@ from hw6_race.shared.gatekeeper import ApiGatekeeper
 
 LOCAL_COP_TOKEN = "local-cop-token"
 LOCAL_THIEF_TOKEN = "local-thief-token"
+
+logger = logging.getLogger(__name__)
 
 
 def _stub_complete(prompt: str) -> str:
@@ -31,6 +37,24 @@ def _stub_complete(prompt: str) -> str:
 def build_default_llm_client(gatekeeper: ApiGatekeeper) -> LLMClient:
     """Build the safe, no-network default LLM client, routed through `gatekeeper`."""
     return GatekeptLLMClient(gatekeeper, _stub_complete)
+
+
+def build_llm_client_from_env(gatekeeper: ApiGatekeeper) -> LLMClient:
+    """Build a real provider LLMClient from `LLM_PROVIDER`/`LLM_API_KEY`/
+    `LLM_MODEL` (see .env-example), or fall back to the safe stub if either
+    is missing — this project never makes an unauthorized API call (HW-F19).
+    """
+    provider = os.environ.get("LLM_PROVIDER", "").strip().lower()
+    api_key = os.environ.get("LLM_API_KEY", "").strip()
+
+    if provider == "anthropic" and api_key:
+        model = os.environ.get("LLM_MODEL", "").strip() or None
+        kwargs = {"model": model} if model else {}
+        logger.info("Using real Anthropic LLM backend")
+        return GatekeptLLMClient(gatekeeper, AnthropicCompleteFn(api_key, **kwargs))
+
+    logger.info("No real LLM provider configured; using the safe no-network stub")
+    return build_default_llm_client(gatekeeper)
 
 
 def build_auth_manager() -> TokenAuthManager:

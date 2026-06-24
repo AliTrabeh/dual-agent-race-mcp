@@ -4,8 +4,10 @@ version = "1.00.0"
 description = "HW6: Dual AI Agent Race via MCP Servers (Cop/Thief pursuit game)"
 requires-python = ">=3.11"
 dependencies = [
+    "anthropic>=0.111.0",
     "fastmcp>=2.0.0",
     "pydantic>=2.0.0",
+    "python-dotenv>=1.2.2",
 ]
 
 [dependency-groups]

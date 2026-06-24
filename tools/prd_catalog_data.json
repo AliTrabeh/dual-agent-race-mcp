@@ -3451,7 +3451,7 @@
     "acceptance": "Switching to this option requires only a config/.env change, no code change.",
     "chunk": "4,10",
     "test_method": "Manual deployment verification plus an LLMClient interface unit test",
-    "status": "Not Started"
+    "status": "Done"
   },
   {
     "category": "LLM Connectivity Option",
@@ -3770,7 +3770,7 @@
     "acceptance": "`LLMClient`'s docstring states Input/Output/Setup and it has an independent, focused test file.",
     "chunk": "varies",
     "test_method": "Code review of docstring plus presence of a dedicated test file",
-    "status": "Not Started"
+    "status": "Done"
   },
   {
     "category": "Component Design (Building Block)",

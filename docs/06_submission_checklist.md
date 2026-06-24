@@ -48,7 +48,7 @@ Merged from the HW PDF's submission requirements (§11, §13) and the Guidelines
 - [x] Test coverage ≥85% globally (`pytest --cov`) — 100.00% as of Chunk 9/10
 - [x] `ruff check` reports 0 warnings
 - [x] Edge cases documented and tested (see `docs/05_testing_strategy.md`)
-- [x] All dependency/build/test/run commands go through `uv` (`uv sync`, `uv add`, `uv run python`, `uv run pytest`, `uv lock`) — no `pip`, no `requirements.txt` — `uv` confirmed installed and working as of Chunk 9
+- [x] All dependency/build/test/run commands go through `uv` (`uv sync`, `uv add`, `uv run python`, `uv run pytest`, `uv lock`) — no `pip`, no `requirements.txt` — confirmed via an actual fresh-clone smoke test (Chunk 10), which caught and fixed a real bug: dev tooling was declared under `[project.optional-dependencies]` (not installed by plain `uv sync`) rather than `[dependency-groups]` (installed by default) — see `docs/07_risks_and_open_questions.md`
 - [x] `pyproject.toml` is the single dependency source of truth; `uv.lock` exists and is committed
 - [ ] Git history is meaningful; feature branches + PRs + release tags used — **honest gap**: commit messages are meaningful and one-per-chunk (per the user's explicit workflow request), but all work has gone directly to `main` with no feature branches, no PRs, and no release tags. This is a real, acknowledged deviation from SG-U03, not silently glossed over — revisit before final submission if a stricter git workflow is desired
 

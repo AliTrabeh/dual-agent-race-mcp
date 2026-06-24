@@ -1,0 +1,28 @@
+# Secrets — never commit
+.env
+*.key
+*.pem
+credentials.json
+token.json
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.ruff_cache/
+htmlcov/
+.coverage
+
+# Environments
+.venv/
+venv/
+
+# IDE
+.idea/
+
+# Generated outputs (kept as a directory via .gitkeep, contents ignored)
+outputs/*
+!outputs/.gitkeep
+results/*
+!results/.gitkeep

@@ -22,14 +22,27 @@ from hw6_race.shared.config import GameConfig
 logger = logging.getLogger(__name__)
 
 
-def observation_for(state: RaceState, role: AgentRole) -> AgentObservation:
-    """Build the AgentObservation `role` is allowed to see from `state`."""
+def observation_for(
+    state: RaceState,
+    role: AgentRole,
+    believed_opponent_position: tuple[int, int] | None = None,
+) -> AgentObservation:
+    """Build the AgentObservation `role` is allowed to see from `state`.
+
+    `believed_opponent_position` is supplied by the caller (the agent's own
+    running belief, see BaseAgent) — this function never reads the true
+    opponent position itself, preserving partial observability (HW-F02).
+    """
     position = state.cop_position if role == AgentRole.COP else state.thief_position
     barriers_remaining = (
         state.max_barriers - state.barriers_placed if role == AgentRole.COP else 0
     )
     return AgentObservation(
-        own_position=position, grid_size=state.grid_size, barriers_remaining=barriers_remaining
+        own_position=position,
+        grid_size=state.grid_size,
+        barriers_remaining=barriers_remaining,
+        role=role,
+        believed_opponent_position=believed_opponent_position,
     )
 
 
@@ -46,7 +59,7 @@ async def take_turn(
         inference = agent.interpret_message(text)
         logger.debug("[%s] inferred %s from %r", role.value, inference, text)
 
-    observation = observation_for(state, role)
+    observation = observation_for(state, role, agent.believed_opponent_position)
     message = agent.compose_message(observation)
     logger.info("[%s] move %d, at %s, says: %r", role.value, state.move_count + 1, observation.own_position, message)
     await own_client.send_message(message)

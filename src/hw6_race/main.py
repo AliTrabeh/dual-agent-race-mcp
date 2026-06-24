@@ -20,8 +20,6 @@ from hw6_race.shared.version import get_version
 
 DEFAULT_OUTPUT_DIR = "results"
 
-load_dotenv()  # populates LLM_PROVIDER/LLM_API_KEY/etc. from .env, if present
-
 
 def build_arg_parser() -> argparse.ArgumentParser:
     """Build the CLI's argument parser (presentation concern, not business logic)."""
@@ -65,7 +63,13 @@ def _write_summary_file(output_dir: str, result: GameResult) -> Path:
 
 
 def main(argv: list[str] | None = None) -> int:
-    """CLI entry point. Returns the process exit code."""
+    """CLI entry point. Returns the process exit code.
+
+    `load_dotenv()` runs here (not at module import time) so that merely
+    importing this module — e.g. from a test — never has the side effect of
+    pulling real credentials from .env into the environment (SG-T03).
+    """
+    load_dotenv()  # populates LLM_PROVIDER/LLM_API_KEY/etc. from .env, if present
     args = build_arg_parser().parse_args(argv)
     logging.basicConfig(level=args.log_level, format="%(levelname)s %(name)s: %(message)s")
     logging.getLogger("mcp").setLevel(logging.WARNING)  # keep CLI trace readable, not library noise

@@ -7,7 +7,7 @@ DecisionStrategy and every concrete agent stays interoperable (SG-C04).
 from dataclasses import dataclass
 from enum import StrEnum
 
-from hw6_race.constants import MoveDirection
+from hw6_race.constants import AgentRole, MoveDirection
 
 
 class ActionType(StrEnum):
@@ -31,12 +31,18 @@ class AgentObservation:
 
     `barriers_remaining` is meaningful for the Cop only; Thief observations should
     pass 0. `inbox` holds whatever NL messages have arrived since the last turn.
+    `role` and `believed_opponent_position` default to None so existing
+    construction sites (and DecisionStrategy implementations that ignore
+    inferred beliefs) keep working unchanged — HeuristicStrategy only chases
+    or flees once a real belief is actually present (HW-F02).
     """
 
     own_position: tuple[int, int]
     grid_size: tuple[int, int]
     barriers_remaining: int
     inbox: tuple[str, ...] = ()
+    role: AgentRole | None = None
+    believed_opponent_position: tuple[int, int] | None = None
 
 
 @dataclass(frozen=True)

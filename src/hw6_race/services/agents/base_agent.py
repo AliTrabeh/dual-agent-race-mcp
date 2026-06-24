@@ -23,6 +23,11 @@ class BaseAgent:
     Input: an AgentObservation per turn. Output: an AgentAction (decide_action),
     a text message (compose_message), or an Inference (interpret_message).
     Setup: role, LLMClient, and DecisionStrategy collaborators, injected once.
+
+    `believed_opponent_position` is the agent's own running belief, updated
+    only when interpret_message successfully parses a position — an
+    ambiguous/empty/error turn preserves the last known good belief rather
+    than discarding it (HW-F02: decode + infer must actually inform a move).
     """
 
     def __init__(
@@ -31,6 +36,11 @@ class BaseAgent:
         self.role = role
         self._llm_client = llm_client
         self._strategy = strategy
+        self._believed_opponent_position: tuple[int, int] | None = None
+
+    @property
+    def believed_opponent_position(self) -> tuple[int, int] | None:
+        return self._believed_opponent_position
 
     def decide_action(self, observation: AgentObservation):
         return self._strategy.decide(observation)
@@ -66,6 +76,7 @@ class BaseAgent:
             )
 
         position = (int(match.group(1)), int(match.group(2)))
+        self._believed_opponent_position = position
         return Inference(believed_position=position, confidence="stated", raw_text=opponent_text)
 
     def _build_compose_prompt(self, observation: AgentObservation) -> str:
@@ -83,6 +94,7 @@ class BaseAgent:
     def _build_interpret_prompt(self, opponent_text: str) -> str:
         return (
             f"The opponent said: {opponent_text!r}. "
-            "If they revealed a believed grid position, reply with exactly 'ROW,COL'. "
-            "If unclear, reply with 'UNKNOWN'."
+            "If they revealed a believed grid position, reply with ONLY 'ROW,COL' "
+            "(e.g. '2,3') and nothing else. If unclear, reply with ONLY 'UNKNOWN' "
+            "and no explanation."
         )

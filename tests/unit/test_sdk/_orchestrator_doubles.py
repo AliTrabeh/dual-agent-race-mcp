@@ -11,6 +11,7 @@ class FakeAgent:
         self._action = action
         self.interpreted: list[str] = []
         self.composed_for: list[AgentObservation] = []
+        self.believed_opponent_position: tuple[int, int] | None = None
 
     def interpret_message(self, text: str) -> Inference:
         self.interpreted.append(text)

@@ -96,3 +96,17 @@ class FakeLLMClient:
 @pytest.fixture
 def fake_llm_client_factory():
     return FakeLLMClient
+
+
+@pytest.fixture(autouse=True)
+def _no_real_llm_credentials_in_tests(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Neutralize any real .env/.env-loaded LLM credentials for every test (SG-T03).
+
+    Sets (not deletes) these to empty strings: python-dotenv's load_dotenv()
+    defaults to override=False, so an *already-present* (even empty) env var
+    is never overwritten — this guards tests that call main()/load_dotenv()
+    directly, not just tests that read os.environ before any loading happens.
+    """
+    monkeypatch.setenv("LLM_PROVIDER", "")
+    monkeypatch.setenv("LLM_API_KEY", "")
+    monkeypatch.setenv("LLM_MODEL", "")

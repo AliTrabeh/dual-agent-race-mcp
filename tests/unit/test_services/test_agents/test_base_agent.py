@@ -96,3 +96,29 @@ def test_interpret_message_handles_llm_error(fake_llm_client_factory) -> None:
 
     assert inference.believed_position is None
     assert inference.confidence == "error"
+
+
+def test_believed_opponent_position_starts_as_none(fake_llm_client_factory) -> None:
+    agent = BaseAgent(AgentRole.THIEF, fake_llm_client_factory(), _FixedActionStrategy(None))
+    assert agent.believed_opponent_position is None
+
+
+def test_believed_opponent_position_updates_on_a_stated_inference(fake_llm_client_factory) -> None:
+    llm = fake_llm_client_factory(responses=["2,3"])
+    agent = BaseAgent(AgentRole.THIEF, llm, _FixedActionStrategy(None))
+
+    agent.interpret_message("I think you're near the middle")
+
+    assert agent.believed_opponent_position == (2, 3)
+
+
+def test_believed_opponent_position_is_preserved_on_a_later_ambiguous_inference(
+    fake_llm_client_factory,
+) -> None:
+    llm = fake_llm_client_factory(responses=["2,3", "UNKNOWN"])
+    agent = BaseAgent(AgentRole.THIEF, llm, _FixedActionStrategy(None))
+
+    agent.interpret_message("first message")
+    agent.interpret_message("second, ambiguous message")
+
+    assert agent.believed_opponent_position == (2, 3)

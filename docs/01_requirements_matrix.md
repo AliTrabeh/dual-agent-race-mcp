@@ -56,7 +56,7 @@ HW6/
 | Req ID | Summary | Artifact(s) | Chunk | Status |
 |--------|---------|-------------|-------|--------|
 | HW-F01 | End-to-end Cop/Thief pursuit pipeline via MCP | `services/race/`, `services/mcp/`, PRD-003, PRD-004 | 5,6 | ✅ (`Hw6RaceSDK.run_local_match()` verified end-to-end: 6/6 sub-games, real in-process MCP, real race engine, safe no-network LLM stub) |
-| HW-F02 | NL decode + inference + move translation | `services/agents/`, PRD-003 | 4,5 | ✅ (full pipeline runs every turn via `sdk/orchestrator.py`'s `take_turn`; HeuristicStrategy does not yet *act* on inferred beliefs — explicitly acceptable per HW-F03) |
+| HW-F02 | NL decode + inference + move translation | `services/agents/`, PRD-003 | 4,5 | ✅ (full pipeline: decode → infer → **translate to move**, verified with a real LLM — `BaseAgent` tracks a running belief, `HeuristicStrategy` chases (Cop)/flees (Thief) once a belief exists, falls back to the original fixed-priority move otherwise; confirmed live: Cop correctly parsed `(4,4)` from the Thief's free-text message) |
 | HW-F03 | Success = communication ability, not win-rate | PRD-003 acceptance criteria, `docs/05_testing_strategy.md` | 5 | ✅ (architecture deliberately keeps the decision strategy simple/deterministic — `HeuristicStrategy` does not optimize win-rate; README §2 documents this design choice explicitly) |
 | HW-F04 | Sub-game = ≤25 moves, alternating, Thief first | `services/race/race_state.py`, `services/race/race_engine.py` | 5,6 | ✅ (wired to real agents via `sdk/orchestrator.py`) |
 | HW-F05 | Game = 6 sub-games, aggregated results | `services/race/race_engine.py`, `services/reporting/` | 6,7 | ✅ (aggregation wired end-to-end; `RunLogger`/`InternalGameReport` build the final JSON) |

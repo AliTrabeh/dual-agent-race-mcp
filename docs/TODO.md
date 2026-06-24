@@ -43,7 +43,7 @@
 | 7 | Logging, JSON protocol, run history, email | done | §Chunk 7 — `services/reporting/{schemas,bonus_report,technical_loss,run_logger,mailer}.py` implemented + tested (203/203 tests, 100% cov, 0 ruff warnings, all files ≤77 lines). Known limitation: `resolve_technical_losses` not yet wired into a single live match — see `docs/07_risks_and_open_questions.md`. |
 | 8 | CLI interface | done | §Chunk 8 — `main.py` rewritten (argparse: --config/--dry-run/--log-level/--output-dir/--version), zero business logic, exit codes 0/1. Also closed a Chunk 6 gap: added the "full per-turn trace logging" step that chunk plan §6 had called for but wasn't implemented. 209/209 tests, 100% cov, 0 ruff warnings, main.py 89 lines. |
 | 9 | Tests (unit + integration, coverage gate) | done | §Chunk 9 — added `tests/integration/test_staged_sanity_checks.py` (HW-F12's 6-grid-size matrix + Stage-1 message-pipeline-lossless check). 217/217 tests, 100% cov, 0 ruff warnings, all line-limit checks pass. No coverage/lint gaps existed to close (sustained 100% since Chunk 6). |
-| 10 | Documentation finalization & submission packaging | not-started | §Chunk 10 |
+| 10 | Documentation finalization & submission packaging | done (with honest gaps) | §Chunk 10 — README rewritten with orchestration-challenge discussion, CLI run evidence, deployment guide (§8); `docs/06_submission_checklist.md` updated honestly with remaining gaps in §G (cloud deploy, OAuth, bonus round are all external/user-action items, not silently dropped). Real cloud deployment NOT performed (no cloud account available autonomously) — documented as an actionable guide instead. |
 | 11 | Final validation against both PDFs | not-started | §Chunk 11 |
 
 ## Explicitly external / not trackable as code tasks

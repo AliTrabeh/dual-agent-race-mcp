@@ -657,7 +657,7 @@
     "acceptance": "The checklist box is checked and is independently verifiable by review or script.",
     "chunk": "10/11",
     "test_method": "Manual review or automated script, per checklist section",
-    "status": "Not Started"
+    "status": "Done"
   },
   {
     "category": "Submission Checklist Item",
@@ -679,7 +679,7 @@
     "acceptance": "The checklist box is checked and is independently verifiable by review or script.",
     "chunk": "10/11",
     "test_method": "Manual review or automated script, per checklist section",
-    "status": "Not Started"
+    "status": "Done"
   },
   {
     "category": "Submission Checklist Item",
@@ -690,7 +690,7 @@
     "acceptance": "The checklist box is checked and is independently verifiable by review or script.",
     "chunk": "10/11",
     "test_method": "Manual review or automated script, per checklist section",
-    "status": "Not Started"
+    "status": "Done"
   },
   {
     "category": "Submission Checklist Item",
@@ -767,7 +767,7 @@
     "acceptance": "The checklist box is checked and is independently verifiable by review or script.",
     "chunk": "10/11",
     "test_method": "Manual review or automated script, per checklist section",
-    "status": "Not Started"
+    "status": "Done"
   },
   {
     "category": "Submission Checklist Item",
@@ -800,7 +800,7 @@
     "acceptance": "The checklist box is checked and is independently verifiable by review or script.",
     "chunk": "10/11",
     "test_method": "Manual review or automated script, per checklist section",
-    "status": "Not Started"
+    "status": "Done"
   },
   {
     "category": "Submission Checklist Item",
@@ -866,7 +866,7 @@
     "acceptance": "The checklist box is checked and is independently verifiable by review or script.",
     "chunk": "10/11",
     "test_method": "Manual review or automated script, per checklist section",
-    "status": "Not Started"
+    "status": "Done"
   },
   {
     "category": "Submission Checklist Item",
@@ -877,7 +877,7 @@
     "acceptance": "The checklist box is checked and is independently verifiable by review or script.",
     "chunk": "10/11",
     "test_method": "Manual review or automated script, per checklist section",
-    "status": "Not Started"
+    "status": "Done"
   },
   {
     "category": "Submission Checklist Item",
@@ -899,7 +899,7 @@
     "acceptance": "The checklist box is checked and is independently verifiable by review or script.",
     "chunk": "10/11",
     "test_method": "Manual review or automated script, per checklist section",
-    "status": "Not Started"
+    "status": "Done"
   },
   {
     "category": "Submission Checklist Item",
@@ -910,7 +910,7 @@
     "acceptance": "The checklist box is checked and is independently verifiable by review or script.",
     "chunk": "10/11",
     "test_method": "Manual review or automated script, per checklist section",
-    "status": "Not Started"
+    "status": "Done"
   },
   {
     "category": "Submission Checklist Item",
@@ -921,7 +921,7 @@
     "acceptance": "The checklist box is checked and is independently verifiable by review or script.",
     "chunk": "10/11",
     "test_method": "Manual review or automated script, per checklist section",
-    "status": "Not Started"
+    "status": "Done"
   },
   {
     "category": "Submission Checklist Item",
@@ -943,7 +943,7 @@
     "acceptance": "The checklist box is checked and is independently verifiable by review or script.",
     "chunk": "10/11",
     "test_method": "Manual review or automated script, per checklist section",
-    "status": "Not Started"
+    "status": "Done"
   },
   {
     "category": "Submission Checklist Item",
@@ -954,7 +954,7 @@
     "acceptance": "The checklist box is checked and is independently verifiable by review or script.",
     "chunk": "10/11",
     "test_method": "Manual review or automated script, per checklist section",
-    "status": "Not Started"
+    "status": "Done"
   },
   {
     "category": "Submission Checklist Item",
@@ -976,7 +976,7 @@
     "acceptance": "The checklist box is checked and is independently verifiable by review or script.",
     "chunk": "10/11",
     "test_method": "Manual review or automated script, per checklist section",
-    "status": "Not Started"
+    "status": "Done"
   },
   {
     "category": "Submission Checklist Item",
@@ -987,7 +987,7 @@
     "acceptance": "The checklist box is checked and is independently verifiable by review or script.",
     "chunk": "10/11",
     "test_method": "Manual review or automated script, per checklist section",
-    "status": "Not Started"
+    "status": "Done"
   },
   {
     "category": "Submission Checklist Item",
@@ -998,7 +998,7 @@
     "acceptance": "The checklist box is checked and is independently verifiable by review or script.",
     "chunk": "10/11",
     "test_method": "Manual review or automated script, per checklist section",
-    "status": "Not Started"
+    "status": "Done"
   },
   {
     "category": "Submission Checklist Item",
@@ -1031,7 +1031,7 @@
     "acceptance": "The checklist box is checked and is independently verifiable by review or script.",
     "chunk": "10/11",
     "test_method": "Manual review or automated script, per checklist section",
-    "status": "Not Started"
+    "status": "Done"
   },
   {
     "category": "Submission Checklist Item",
@@ -1042,7 +1042,7 @@
     "acceptance": "The checklist box is checked and is independently verifiable by review or script.",
     "chunk": "10/11",
     "test_method": "Manual review or automated script, per checklist section",
-    "status": "Not Started"
+    "status": "Done"
   },
   {
     "category": "Submission Checklist Item",
@@ -3957,7 +3957,7 @@
     "acceptance": "Manual review confirms README.md: CLI run evidence is present and accurate as of the latest commit.",
     "chunk": "1,10",
     "test_method": "Manual documentation review at each chunk boundary",
-    "status": "Not Started"
+    "status": "Done"
   },
   {
     "category": "Documentation Requirement",

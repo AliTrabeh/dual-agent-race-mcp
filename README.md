@@ -1,7 +1,7 @@
 # HW6 — Dual AI Agent Race via MCP Servers (Cop/Thief Pursuit Game)
 
 **Course**: AI Agents / AI Orchestra — Assignment 6 ("Dual AI Agent Conversation via MCP Servers")
-**Status**: Phase 0/1 complete (planning + skeleton). Game logic implementation has **not** started yet — see [Implementation Status](#implementation-status).
+**Status**: Chunks 0–9 complete (full local pipeline, 217/217 tests, 100% coverage). Chunk 10 (this document, cloud deployment guide) in progress — see [§10 Implementation Status](#10-implementation-status).
 
 ## 1. Overview
 
@@ -13,20 +13,28 @@ Formally, this is a 2-agent, partially-observable, decentralized pursuit problem
 ⟨ n, S, {Aᵢ}, P, R, {Ωᵢ}, O, γ ⟩
 ```
 
-| Symbol | Meaning in this project |
-|--------|---------------------------|
-| `n = 2` | Cop and Thief agents |
-| `S` | Full grid state: Cop position, Thief position, set of up to 5 barriers, move counter |
-| `{Aᵢ}` | Thief: 4 movement directions. Cop: 4 movement directions + place-barrier |
-| `P` | Deterministic grid transition given a legal action |
-| `R` | The fixed scoring table (Cop win → 20/5, Thief win → 10/5), sourced from `config/setup.json` |
-| `{Ωᵢ}` | Each agent observes only its own position plus whatever natural-language text the opponent chose to send — this is the partial-observability layer |
-| `O` | Implicit in what each agent's MCP server tool returns to its own LLM client — never a shared ground-truth channel |
-| `γ` | Discount factor, meaningful only if the optional Q-Learning strategy (`docs/PRD_q_learning.md`) is enabled |
+| Symbol | Meaning in this project | Implemented by |
+|--------|---------------------------|------------------|
+| `n = 2` | Cop and Thief agents | `services/agents/{cop_agent,thief_agent}.py` |
+| `S` | Full grid state: Cop position, Thief position, set of up to 5 barriers, move counter | `services/race/race_state.py::RaceState` |
+| `{Aᵢ}` | Thief: 4 movement directions. Cop: 4 movement directions + place-barrier | `services/agents/models.py::AgentAction` |
+| `P` | Deterministic grid transition given a legal action | `RaceState.apply_action()` |
+| `R` | The fixed scoring table (Cop win → 20/5, Thief win → 10/5), sourced from `config/setup.json` | `services/race/scoring.py::score_sub_game()` |
+| `{Ωᵢ}` | Each agent observes only its own position plus whatever natural-language text the opponent chose to send — this is the partial-observability layer | `services/agents/models.py::AgentObservation` |
+| `O` | Implicit in what each agent's MCP server tool returns to its own LLM client — never a shared ground-truth channel | `services/mcp/server_base.py`, `sdk/orchestrator.py::take_turn` |
+| `γ` | Discount factor, meaningful only if the optional Q-Learning strategy (`docs/PRD_q_learning.md`) is enabled | not yet implemented (explicitly optional, HW-F20) |
 
-The hardest engineering problem this project targets — named explicitly in the source assignment — is that the two agents are **independent, decoupled, and use free natural language with no shared protocol** to coordinate under partial observability. See `docs/03_architecture.md` for the full discussion of how the architecture isolates this concern from the (separately swappable) decision-making strategy.
+## 2. The Orchestration Challenge (Theoretical Discussion)
 
-## 2. Requirements Summary
+The hardest engineering problem this assignment targets — named explicitly in the source PDF — is that the two agents are **independent, decoupled, and use free natural language with no shared protocol** to coordinate under partial observability. Three concrete consequences of that constraint shaped this implementation:
+
+**No rigid message schema.** Each agent's MCP server (`services/mcp/server_a.py`/`server_b.py`) exposes exactly three transport-level tools — `send_message`, `receive_message`, `get_inbox` — and none of them inspect, validate, or transform the text they carry. Both servers are built from one shared scaffold (`server_base.py`) precisely so neither could accidentally become a side channel for structured, non-NL information. The cost of this freedom is real: in the current implementation, both agents' decision strategy (`HeuristicStrategy`) does not yet *act* on what it infers from the opponent's messages — `BaseAgent.interpret_message()` faithfully decodes and infers a believed position every turn (`sdk/orchestrator.py::take_turn`), but the heuristic move-selection ignores that belief. This is a deliberate, documented scope boundary (see `docs/01_requirements_matrix.md` HW-F02), consistent with the assignment's own framing that orchestration quality — not strategic cleverness — is what's graded (HW-F03).
+
+**Ambiguity is the default, not the exception.** Because there is no shared schema, an opponent's natural-language message may not state a position at all, may state one ambiguously, or — in this project's current configuration, which intentionally defaults to a safe, no-network LLM stub rather than ever making an unauthorized API call — may simply be a fixed placeholder string. `BaseAgent.interpret_message()` handles all three cases identically and without crashing: it asks the (stub or real) LLM to reply in a constrained `"ROW,COL"` / `"UNKNOWN"` format, and treats anything that doesn't parse as `confidence="ambiguous"` rather than raising. This graceful-degradation behavior was verified live, not just in a mock — running a full match with the default rate limits intentionally exhausted (a realistic constraint with any real paid LLM provider) showed dozens of `WARNING ... could not parse a position from LLM response: 'UNKNOWN'` lines, with the match still completing cleanly every time (see [§5 CLI Run Evidence](#5-cli-run-evidence)).
+
+**Mutual understanding has no referee.** Because the architecture forbids the MCP transport layer from adjudicating what either agent "really" believes, the only ground truth that exists anywhere in the system is `RaceState` itself — owned exclusively by the race engine (Chunk 5), never by either agent. This is why `services/race/race_state.py` checks capture regardless of which agent's move caused the two positions to coincide (a documented interpretation, since the HW PDF only describes the Cop's case explicitly): the engine has no concept of "whose fault" a shared cell is, only of whether it occurred. Decoupling "what is true" (the engine) from "what each agent believes" (the agent layer's `Inference` objects) is the structural choice that makes the whole system testable without a live LLM.
+
+## 3. Requirements Summary
 
 This repository is governed by two source documents, both preserved at the project root and **must not be deleted or modified**:
 
@@ -42,24 +50,53 @@ Every requirement extracted from both PDFs is tracked in [`docs/00_source_analys
 - Automatically email a structured JSON match report to the grading address after every 6-sub-game match.
 - Follow the Guidelines PDF's professional-engineering bar: SDK architecture, central API Gatekeeper, `uv`-only tooling, ≤150 lines/file, ≥85% test coverage, zero `ruff` warnings, versioning starting at 1.00.
 
-## 3. Installation
-
-> **Prerequisite**: [`uv`](https://docs.astral.sh/uv/) is the **only** supported package/environment manager for this project — `pip install`, `python -m venv`, and `requirements.txt` are explicitly forbidden by the submission guidelines. Install `uv` first if you don't have it.
+## 4. Installation
 
 ```bash
-git clone <this-repo-url>
-cd HW6
+git clone https://github.com/AliTrabeh/dual-agent-race-mcp.git
+cd dual-agent-race-mcp
 uv sync                  # installs all dependencies into a uv-managed virtual environment
 cp .env-example .env     # then fill in real values — see below
 ```
 
-Required `.env` values (see `.env-example` for the full list and inline documentation):
+`uv` (https://docs.astral.sh/uv/) is the **only** supported package/environment manager for this project — `pip install`, `python -m venv`, and `requirements.txt` are explicitly forbidden by the submission guidelines, and `uv.lock` is committed.
 
-- `LLM_API_KEY` / `LLM_PROVIDER` / `LLM_MODEL` — credentials for whichever of the 3 supported LLM-connectivity architectures you choose (public cloud API key, local Ollama + tunnel, or the hybrid local-Ollama/cloud-MCP-server setup — see `docs/03_architecture.md` §3).
-- `MCP_COP_AUTH_TOKEN` / `MCP_THIEF_AUTH_TOKEN` — auth tokens for the two MCP servers.
-- `GMAIL_OAUTH_CLIENT_SECRET_PATH` / `GMAIL_OAUTH_TOKEN_PATH` — Google API OAuth credentials for the automated end-of-match report email. **Must be real, user-supplied credentials** — see `docs/07_risks_and_open_questions.md` (HW-Q05).
+Required `.env` values (see `.env-example` for the full list and inline documentation) — **only needed if you want real LLM-driven agents or real email dispatch**; the default `uv run python -m hw6_race.main` works with zero `.env` configuration, using a safe no-network LLM stub:
 
-## 4. Usage
+- `LLM_API_KEY` / `LLM_PROVIDER` / `LLM_MODEL` — credentials for whichever of the 3 supported LLM-connectivity architectures you choose (public cloud API key, local Ollama + tunnel, or the hybrid local-Ollama/cloud-MCP-server setup — see [§2](#2-the-orchestration-challenge-theoretical-discussion) and `docs/03_architecture.md` §3).
+- `MCP_COP_AUTH_TOKEN` / `MCP_THIEF_AUTH_TOKEN` — auth tokens for the two MCP servers (only relevant once deployed to the cloud — see [§8](#8-deployment-guide-local--cloud--inter-group-bonus)).
+- `GMAIL_OAUTH_CLIENT_SECRET_PATH` / `GMAIL_OAUTH_TOKEN_PATH` — Google API OAuth credentials for the automated end-of-match report email. **Must be real, user-supplied credentials** — see `docs/07_risks_and_open_questions.md` (HW-Q05). Never a stored password (SG-C09).
+
+## 5. CLI Run Evidence
+
+A full local match, run with `uv run python -m hw6_race.main --log-level INFO`, produces a per-turn trace and a final JSON summary. Excerpt from an actual run (not reconstructed):
+
+```text
+INFO hw6_race.sdk.orchestrator: [thief] move 1, at (4, 4), says: 'no comment'
+INFO hw6_race.sdk.orchestrator: [thief] move 1, action: AgentAction(action_type=<ActionType.MOVE: 'move'>, direction=<MoveDirection.LEFT: 'left'>)
+WARNING hw6_race.services.agents.base_agent: [cop] could not parse a position from LLM response: 'UNKNOWN'
+INFO hw6_race.sdk.orchestrator: [cop] move 2, at (0, 0), says: 'no comment'
+INFO hw6_race.sdk.orchestrator: [cop] move 2, action: AgentAction(action_type=<ActionType.MOVE: 'move'>, direction=<MoveDirection.RIGHT: 'right'>)
+...
+```
+
+```json
+{
+  "sub_games": [
+    { "index": 1, "outcome": "cop_win", "move_count": 16, "cop_points": 20, "thief_points": 5 },
+    { "index": 2, "outcome": "cop_win", "move_count": 16, "cop_points": 20, "thief_points": 5 },
+    { "index": 3, "outcome": "cop_win", "move_count": 16, "cop_points": 20, "thief_points": 5 },
+    { "index": 4, "outcome": "cop_win", "move_count": 16, "cop_points": 20, "thief_points": 5 },
+    { "index": 5, "outcome": "cop_win", "move_count": 16, "cop_points": 20, "thief_points": 5 },
+    { "index": 6, "outcome": "cop_win", "move_count": 16, "cop_points": 20, "thief_points": 5 }
+  ],
+  "totals": { "cop": 120, "thief": 30 }
+}
+```
+
+This is deterministic under the default configuration (the no-network LLM stub and `HeuristicStrategy` are both fully deterministic), and the totals land exactly on the `w=6` (all-Cop-wins) edge of the bound derived for a fixed-role local match (`cop_total = 15w + 30`, `thief_total = 60 − 5w`; see `docs/prds/PRD-003-dual-agent-race-logic.md`). With a real LLM provider configured, both the messages and the outcomes become genuinely non-deterministic.
+
+## 6. Usage
 
 ```bash
 uv run python -m hw6_race.main                          # runs a full local 6-sub-game match using config/setup.json
@@ -80,39 +117,57 @@ result = sdk.run_local_match()  # runs 6 sub-games end-to-end, returns a GameRes
 print(result.total_cop_points, result.total_thief_points)
 ```
 
-A full run: starts both MCP servers in-process, runs 6 sub-games to completion via real agent/MCP turns (each turn drains the opponent's inbox, interprets it, composes a new message, sends it through the agent's own MCP server, relays it to the opponent's server, then decides and applies a move), logs a human-readable per-turn trace, writes the result to `results/last_match_result.json`, and exits non-zero if any sub-game ended in a Technical Loss. JSON-schema reporting (`InternalGameReport`) and auto-email dispatch (`ReportMailer`) exist and are tested but not yet wired into the CLI's default output path — see `docs/07_risks_and_open_questions.md` for the exact known limitation. To use a real LLM provider instead of the safe default stub, pass `Hw6RaceSDK(llm_client=...)` with your own `LLMClient` implementation — see `.env-example` for the credential layout.
+A full run: starts both MCP servers in-process, runs 6 sub-games to completion via real agent/MCP turns (each turn drains the opponent's inbox, interprets it, composes a new message, sends it through the agent's own MCP server, relays it to the opponent's server, then decides and applies a move), logs a human-readable per-turn trace, writes the result to `results/last_match_result.json`, and exits non-zero if any sub-game ended in a Technical Loss. JSON-schema reporting (`InternalGameReport`) and auto-email dispatch (`ReportMailer`) exist and are tested but not yet wired into the CLI's default output path — see `docs/07_risks_and_open_questions.md` for the exact known limitation. To use a real LLM provider instead of the safe default stub, pass `Hw6RaceSDK(llm_client=...)` with your own `LLMClient` implementation.
 
-## 5. Running Tests
+## 7. Running Tests
 
 ```bash
 uv run pytest tests/ -v                                   # full test suite
 uv run pytest tests/ --cov=src --cov-report=term-missing   # with coverage (gate: ≥85%)
-uv run ruff check src/ tests/                              # lint gate (must report 0 warnings)
+uv run ruff check src/ tests/ tools/                       # lint gate (must report 0 warnings)
 ```
 
-As of this commit: **217/217 tests pass, 100% coverage, 0 ruff warnings**, including a staged sanity-check matrix across 6 grid sizes (2×2 through 5×5, per the HW PDF's own recommended progression). A full local match (`Hw6RaceSDK().run_local_match()`) now runs genuinely end-to-end and is runnable directly from the CLI (`uv run python -m hw6_race.main`), and its `GameResult` can be turned into a submission-schema-exact Internal Game JSON report and emailed (with a mocked send function in tests; real Gmail OAuth credentials are user-supplied, never fabricated) (config loader, version tracking, API Gatekeeper, import-safety checks, and the project-wide 150-line file check). Game logic is not yet present, so these numbers will shift as chunks 3–9 land — see `docs/05_testing_strategy.md`.
+As of this commit: **217/217 tests pass, 100% coverage, 0 ruff warnings**, including a staged sanity-check matrix across 6 grid sizes (2×2 through 5×5, per the HW PDF's own recommended progression). Every Python file in `src/`, `tests/`, `tools/` is capped at 150 *physical* lines (blank lines and comments included) — stricter than the submission guidelines' 150-*logical*-line cap, enforced by `tests/test_line_limits.py`. See `docs/PLAN.md` ADR-006 and `docs/05_testing_strategy.md`.
 
-**Project rule**: every Python file in this repo (`src/`, `tests/`, `tools/`) is capped at 150 *physical* lines (blank lines and comments included) — stricter than the submission guidelines' 150-*logical*-line cap. Enforced by `tests/test_line_limits.py`, run as part of the normal test suite. See `docs/PLAN.md` ADR-006.
+## 8. Deployment Guide: Local → Cloud → Inter-Group Bonus
 
-## 6. Project Structure
+The HW PDF (§6) calls for a 3-stage rollout. Stages are pure config/deployment changes — no code branches per stage (see `docs/03_architecture.md` §4).
+
+**Stage 1 — Local (done, default)**: both MCP servers run in-process, started automatically by `Hw6RaceSDK`. No setup needed beyond `uv sync`.
+
+**Stage 2 — Cloud (action required — not yet performed)**: this stage requires a real cloud account and could make real outbound network calls, so it is documented here as an actionable guide rather than something performed automatically. To deploy:
+
+1. Choose a host (the HW PDF suggests Prefect Cloud as one example; any platform reachable over HTTPS works, e.g. a small VPS, Fly.io, Railway).
+2. Run each server as a standalone FastMCP process — `services/mcp/server_a.py::create_cop_server()` / `server_b.py::create_thief_server()` build the `FastMCP` app; call `app.run()` (or your platform's ASGI entry point) to bind it to a real port.
+3. Put each server behind HTTPS and require the `MCP_COP_AUTH_TOKEN`/`MCP_THIEF_AUTH_TOKEN` from `.env` — never expose a server on the open internet without this (HW-F17). Do not run/test the servers from a hardened organizational network on non-standard ports (HW PDF §5.2).
+4. Record the two resulting URLs in `config/setup.json` (or `.env`) as `cop_mcp_url`/`thief_mcp_url`.
+5. Re-run the full match against the deployed servers and confirm identical behavior to Stage 1 (the architecture guarantees this — only `AgentMCPClient`'s `server` argument changes, from a `FastMCP` instance to a URL string).
+
+**Stage 3 — Inter-Group Bonus Round (external, time-boxed)**: requires pairing with a second student group within 1 week of assignment publication (HW-F27, HW-Q06 in `docs/07_risks_and_open_questions.md`) — out of this repository's control. Once paired: play 6 sub-games split 3-and-3 with roles swapped between groups (HW-F27 §12.1), then **both** groups independently email the *exact same* `InterGroupBonusReport` (see `services/reporting/bonus_report.py`, schema verified against the HW PDF's literal example in `tests/unit/test_services/test_reporting/test_bonus_report.py`). `compute_bonus_claim()` implements the winner=10/loser=7/tie=5 scoring rule (HW-F28); a mismatch between the two groups' reports awards 0 points to both sides.
+
+## 9. Project Structure
 
 ```text
 HW6/
 ├── README.md                      # this file
 ├── pyproject.toml                 # uv-managed deps, ruff config, coverage config
-├── uv.lock                        # generated by `uv lock` once uv is installed
+├── uv.lock                        # committed; uv sync/run are the canonical commands
 ├── .env-example                   # placeholder secrets — copy to .env
 ├── .gitignore
 ├── src/hw6_race/
 │   ├── main.py                    # CLI — zero business logic, delegates to sdk/
 │   ├── constants.py               # all named constants/enums — no magic values elsewhere
-│   ├── sdk/sdk.py                 # SINGLE entry point for all business logic
+│   ├── sdk/                       # Hw6RaceSDK (the single entry point), orchestrator.py, wiring.py
 │   ├── shared/                    # config.py, version.py, gatekeeper.py (cross-cutting infra)
-│   └── services/                  # agents/, mcp/, race/, reporting/ (domain logic, built per chunk)
+│   └── services/
+│       ├── agents/                # LLMClient, DecisionStrategy, BaseAgent/CopAgent/ThiefAgent
+│       ├── mcp/                   # FastMCP servers, auth, message store, async client
+│       ├── race/                  # RaceState, RaceEngine, scoring, exceptions
+│       └── reporting/             # Internal/Bonus JSON schemas, technical-loss handling, mailer
 ├── tests/
-│   ├── conftest.py                # shared fixtures (fake clock, sample configs)
+│   ├── conftest.py                # shared fixtures (fake clock, sample configs, fake LLM client)
 │   ├── unit/                      # mirrors src/ structure
-│   └── integration/
+│   └── integration/                # MCP round-trips, full SDK matches, staged sanity-check matrix
 ├── config/
 │   ├── setup.json                 # ALL game parameters — grid size, scoring, etc.
 │   └── rate_limits.json           # API Gatekeeper rate-limit config
@@ -132,26 +187,24 @@ HW6/
 └── software_submission_guidelines-V3.pdf
 ```
 
-## 7. Implementation Status
-
-This repository is currently at the end of **Phase 0/1**: full requirement extraction, documentation, and an import-safe skeleton — **no game logic has been implemented yet**, by design (the submission guidelines explicitly forbid writing code before architecture/requirements docs are approved). See `docs/TODO.md` for the live task tracker.
+## 10. Implementation Status
 
 | Chunk | Title | Status |
 |-------|-------|--------|
 | 0 | Project init & repo structure | ✅ done |
 | 1 | Requirements extraction & validation checklist | ✅ done |
-| 2 | Core config system, Gatekeeper, versioning | ✅ done (skeleton-level: config loader, version, Gatekeeper implemented + tested) |
+| 2 | Core config system, Gatekeeper, versioning | ✅ done |
 | 3 | MCP server/client layer | ✅ done (auth + revoke, NL pass-through, in-process tested) |
 | 4 | Agent abstraction layer | ✅ done (LLMClient + DecisionStrategy interfaces, HeuristicStrategy, BaseAgent/CopAgent/ThiefAgent) |
 | 5 | Dual-agent race mechanism | ✅ done (grid, movement, barriers, capture/survival, scoring; Q-Learning stretch not attempted) |
-| 6 | Controller / orchestrator / game loop | ✅ done (`Hw6RaceSDK.run_local_match()` verified end-to-end; Technical Loss containment in place, full rerun-to-6 is Chunk 7) |
+| 6 | Controller / orchestrator / game loop | ✅ done (`Hw6RaceSDK.run_local_match()` verified end-to-end) |
 | 7 | Logging, JSON protocol, run history, email | ✅ done (schemas, technical-loss algorithm, run logger, mailer — all tested; live-match rerun wiring flagged as a known limitation) |
 | 8 | CLI interface | ✅ done (argparse, exit codes, output file, zero business logic) |
 | 9 | Tests (suite-level completion, coverage gate) | ✅ done (staged sanity-check matrix across 6 grid sizes; 100% coverage sustained since Chunk 6) |
-| 10 | Documentation finalization & submission packaging | 🟨 this README is a living document, finalized in chunk 10 |
+| 10 | Documentation finalization & submission packaging | 🟨 README finalized (this commit); real cloud deployment is an actionable guide, not yet performed (requires a real cloud account — see §8) |
 | 11 | Final validation against both PDFs | ⬜ not started |
 
-## 8. Configuration Guide
+## 11. Configuration Guide
 
 All game parameters live in `config/setup.json` — never hard-coded in source:
 
@@ -166,19 +219,19 @@ All game parameters live in `config/setup.json` — never hard-coded in source:
 
 Rate limits for all outbound API calls (LLM provider, Gmail) live in `config/rate_limits.json` and are enforced centrally by `shared/gatekeeper.py`'s `ApiGatekeeper` — no call site implements its own rate limiting.
 
-## 9. Contribution Guidelines
+## 12. Contribution Guidelines
 
 - Follow the chunk plan in `docs/04_implementation_chunks.md` — do not implement a chunk before its referenced PRD exists and is reviewed.
 - Every new module needs a matching test file (TDD: tests before/alongside implementation).
-- Keep every source file ≤150 logical lines; split via helper modules/constants/mixins per `docs/00_source_analysis.md` SG-C01.
+- Keep every source file ≤150 physical lines; split via helper modules/constants/mixins per `docs/00_source_analysis.md` §9a (PROJ-R01) and SG-C01.
 - Run `uv run ruff check` and `uv run pytest --cov` before committing; both gates must pass clean.
 - Update `docs/TODO.md` and `docs/01_requirements_matrix.md` in the same change as the code it tracks.
 - Record significant AI-assisted prompts in `docs/08_claude_work_log.md` (Prompt Engineering Log).
 
-## 10. License & Third-Party Credits
+## 13. License & Third-Party Credits
 
 Academic submission for course use. Third-party dependencies are declared in `pyproject.toml`; their respective licenses apply (notably FastMCP, pydantic, pytest, ruff).
 
-## 11. Submission Checklist
+## 14. Submission Checklist
 
-See [`docs/06_submission_checklist.md`](docs/06_submission_checklist.md) for the full merged checklist (HW PDF §11/§13 + Guidelines PDF §17/§19). High-level status: documentation and skeleton requirements are satisfied; game logic, MCP servers, cloud deployment, and the automated email report are pending chunks 3–10.
+See [`docs/06_submission_checklist.md`](docs/06_submission_checklist.md) for the full merged checklist (HW PDF §11/§13 + Guidelines PDF §17/§19). High-level status: the full local pipeline, documentation, and testing requirements are satisfied (Chunks 0–9); cloud deployment (§8 above) and the inter-group bonus round require real external accounts/credentials and a paired second group, and remain explicit user actions, not automatable by this codebase alone.

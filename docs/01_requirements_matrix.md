@@ -69,7 +69,7 @@ HW6/
 | HW-F13 | Two independent MCP servers (Cop/Thief) | `services/mcp/server_a.py`, `server_b.py` | 3 | ✅ |
 | HW-F14 | FastMCP-based tool exposure | `services/mcp/server_base.py` | 3 | ✅ |
 | HW-F15 | LLM decoupled from MCP server; client = orchestrator | `sdk/sdk.py`, `services/agents/base_agent.py` | 4,6 | ✅ (`sdk/orchestrator.py` is the MCP client; servers remain LLM-free, verified by code structure) |
-| HW-F16 | 3-stage rollout: local → cloud → bonus competition | `docs/06_submission_checklist.md`, PRD-007 | 10 | ⬜ |
+| HW-F16 | 3-stage rollout: local → cloud → bonus competition | `docs/06_submission_checklist.md`, PRD-007 | 10 | 🟨 (Stage 1 local: ✅ done and proven; Stage 2 cloud: actionable guide written in README §8, not yet performed — requires real cloud account; Stage 3 bonus: external, HW-Q06) |
 | HW-F17 | Token auth + revoke, no open firewall exposure | `services/mcp/server_base.py`, PRD-002 | 3 | ✅ (local auth+revoke proven; firewall/cloud-exposure rules apply at Chunk 10 deploy time) |
 | HW-F18 | Exactly 2 URLs per group (Cop, Thief) | `config/setup.json`, `docs/PRD.md` | 3 | 🟨 (config keys exist; real cloud URLs assigned in Chunk 10) |
 | HW-F19 | 3 LLM connectivity architectures, pluggable | `services/agents/llm_client.py` (LLMClient interface) | 4 | 🟨 (interface + Gatekeeper routing proven swappable in tests; real provider/Ollama/tunnel deployment is Chunk 10) |
@@ -79,14 +79,14 @@ HW6/
 | HW-F23 | Internal Game JSON schema | `services/reporting/schemas.py` | 7 | ✅ (verified field-for-field against the literal HW PDF example) |
 | HW-F24 | Inter-Group Bonus Game JSON schema | `services/reporting/schemas.py` | 7 | ✅ (verified field-for-field against the literal HW PDF example) |
 | HW-F25 | Mandatory config file, all params centralized | `config/setup.json`, `shared/config.py` | 2 | ✅ |
-| HW-F26 | GitHub repo + scientific README (Dec-POMDP tuple etc.) | root `README.md` | 10 | ⬜ |
+| HW-F26 | GitHub repo + scientific README (Dec-POMDP tuple etc.) | root `README.md` | 10 | ✅ (public repo live; README has formal Dec-POMDP tuple, orchestration discussion, real CLI evidence; learning-curve/GUI sections correctly marked N/A — optional, not built) |
 | HW-F27 | Inter-group bonus game execution (external) | PRD-007, `docs/06_submission_checklist.md` | 11 (manual) | ⬜ |
 | HW-F28 | Bonus scoring rules | `services/reporting/`, PRD-007 | 7 | ✅ (`compute_bonus_claim` implements winner/loser/tie; "average across pairings" is an external, multi-match aggregation the user computes, not single-report logic) |
 | HW-F29 | 8-stage dev priority order | `docs/04_implementation_chunks.md` (chunk plan follows this order) | all | 🟨 |
 | HW-N01..N06 | NL freedom, client/server split, gradual rollout, 3 LLM archs, security/automation, team mgmt | architecture docs, `docs/03_architecture.md` | 3,4,6 | 🟨 (NL freedom + client/server split proven end-to-end this chunk; cloud rollout/real LLM archs/OAuth automation remain Chunk 10) |
 | SG-P01 | No code before docs approved ("vibe coding" rule) | this entire Phase 0/1 deliverable | 0,1 | ✅ |
 | SG-P02 | SDLC stage order | `docs/04_implementation_chunks.md` | all | 🟨 |
-| SG-D01 | Mandatory full README | root `README.md` | 0,10 | 🟨 (initial version done; finalized in chunk 10 with real run results) |
+| SG-D01 | Mandatory full README | root `README.md` | 0,10 | ✅ (finalized in Chunk 10 with real run results, deployment guide, orchestration discussion) |
 | SG-D02 | docs/PRD.md, PLAN.md, TODO.md | `docs/PRD.md`, `docs/PLAN.md`, `docs/TODO.md` | 1 | ✅ |
 | SG-D03 | Per-mechanism PRD (`PRD_q_learning.md`) | `docs/PRD_q_learning.md` | 1 | ✅ |
 | SG-D04 | Canonical project layout | this file, Phase 3 skeleton | 0 | ✅ |

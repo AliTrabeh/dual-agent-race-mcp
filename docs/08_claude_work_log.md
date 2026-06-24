@@ -177,3 +177,24 @@ Doubles as the Prompt Engineering Log mandated by Guidelines PDF SG-U04 (prompt 
 - Adopted the user's new per-chunk commit/push cadence starting with this chunk; this entry's corresponding commit is the second one pushed to the repo.
 
 **Next planned entry**: after Chunk 8 (CLI interface) or whichever chunk is approved next.
+
+---
+
+## Entry 9 — 2026-06-25 — Chunk 8: CLI interface
+
+**Prompt context/goal**: User said "continue chunk 8" — proceeded to the CLI interface (`main.py`): argument parsing, calling only `Hw6RaceSDK`, pretty-printing results, satisfying SG-C03.
+
+**What was done**:
+1. Before writing the CLI, re-checked Chunk 6's own plan and found a real gap: its Steps explicitly listed "4) full per-turn trace logging," but Chunk 6 had only added DEBUG-level inference logging — no INFO-level log of what an agent actually composed or decided each turn. Fixed this retroactively in `sdk/orchestrator.py`'s `take_turn` (two new `logger.info` calls: composed message + decided action), re-ran the full Chunk 6/7 test suite to confirm nothing broke, then proceeded.
+2. Implemented `main.py` with `argparse`: `--config`, `--dry-run`, `--log-level` (default INFO), `--output-dir`, and `--version` (using argparse's built-in `action="version"` rather than hand-rolling it, for a correctness guarantee). Kept it deliberately free of business logic — it only parses args, configures logging, calls `Hw6RaceSDK`, and formats/writes output using the *existing* `services.reporting.schemas.build_sub_games_payload` helper (no ad-hoc dict-building reinventing the report shape).
+3. Ran the CLI manually end-to-end before writing tests (`--help`, `--version`, `--dry-run`, a real full match, a missing-config error case) — caught that FastMCP's own internal `mcp.server.lowlevel.server` logger was drowning out the new per-turn trace at INFO level, and fixed it by setting that specific logger to WARNING in `main()` (silencing library noise without touching the project's own log levels) — confirmed by re-running and visually inspecting the now-readable trace.
+4. Defined exit-code semantics matching the PRD catalog's CLI behavior items: 0 on a clean run or dry-run, 1 on a config error or on any Technical Loss sub-game in the result.
+5. Wrote 5 tests (`test_main.py`) covering arg-parser defaults, dry-run, missing-config error, a full mocked-SDK run with output-file verification, and the Technical-Loss-causes-nonzero-exit case.
+6. Validated: 209/209 tests pass, 100% coverage on every module the coverage config actually measures (`main.py` is in the Guidelines PDF's own example `omit` list — by design, not an oversight — but is still tested directly), 0 ruff warnings, `main.py` at 89 lines.
+7. Updated `docs/TODO.md` (Chunk 8 → done, noting the Chunk 6 trace-logging fix), `docs/01_requirements_matrix.md` (SG-C03 note extended), 18 PRD-catalog entries, and regenerated the catalog.
+
+**Key decisions / lessons learned**:
+- Retroactively closing a gap from a previous, already-"done" chunk (rather than treating "done" as immutable) is now an established pattern in this project — the chunk plan's own steps are a checklist to re-verify against, not just a one-time guide.
+- Confirmed real, visible CLI output before trusting the test suite's assertions about it — the FastMCP logging-noise issue would not have been caught by a unit test using a mocked SDK, only by actually running the command.
+
+**Next planned entry**: after Chunk 9 (suite-level test completion) or whichever chunk is approved next.

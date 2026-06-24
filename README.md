@@ -61,7 +61,16 @@ Required `.env` values (see `.env-example` for the full list and inline document
 
 ## 4. Usage
 
-> **Current status**: `Hw6RaceSDK.run_local_match()` is fully implemented and runs a real local 6-sub-game match (in-process MCP servers, real agents, a safe no-network default LLM stub). The CLI entry point (`main.py`) still needs argument parsing/pretty-printing (Chunk 8) — for now, call the SDK directly:
+```bash
+uv run python -m hw6_race.main                          # runs a full local 6-sub-game match using config/setup.json
+uv run python -m hw6_race.main --dry-run                # validate config only, don't run a match
+uv run python -m hw6_race.main --config path/to/custom_setup.json
+uv run python -m hw6_race.main --log-level WARNING       # quieter output (default INFO shows a full per-turn trace)
+uv run python -m hw6_race.main --output-dir results      # where the JSON result is written (default: results/)
+uv run python -m hw6_race.main --version
+```
+
+Or call the SDK directly from Python:
 
 ```python
 from hw6_race.sdk import Hw6RaceSDK
@@ -71,11 +80,7 @@ result = sdk.run_local_match()  # runs 6 sub-games end-to-end, returns a GameRes
 print(result.total_cop_points, result.total_thief_points)
 ```
 
-```bash
-uv run python -m hw6_race.main   # once Chunk 8 lands: full CLI wrapper around the above
-```
-
-A full run today: starts both MCP servers in-process, runs 6 sub-games to completion via real agent/MCP turns (each turn drains the opponent's inbox, interprets it, composes a new message, sends it through the agent's own MCP server, relays it to the opponent's server, then decides and applies a move), and records any sub-game that errors as a Technical Loss rather than crashing. JSON reporting + auto-email and CLI argument parsing land in Chunks 7–8. To use a real LLM provider instead of the safe default stub, pass `Hw6RaceSDK(llm_client=...)` with your own `LLMClient` implementation — see `.env-example` for the credential layout.
+A full run: starts both MCP servers in-process, runs 6 sub-games to completion via real agent/MCP turns (each turn drains the opponent's inbox, interprets it, composes a new message, sends it through the agent's own MCP server, relays it to the opponent's server, then decides and applies a move), logs a human-readable per-turn trace, writes the result to `results/last_match_result.json`, and exits non-zero if any sub-game ended in a Technical Loss. JSON-schema reporting (`InternalGameReport`) and auto-email dispatch (`ReportMailer`) exist and are tested but not yet wired into the CLI's default output path — see `docs/07_risks_and_open_questions.md` for the exact known limitation. To use a real LLM provider instead of the safe default stub, pass `Hw6RaceSDK(llm_client=...)` with your own `LLMClient` implementation — see `.env-example` for the credential layout.
 
 ## 5. Running Tests
 
@@ -85,7 +90,7 @@ uv run pytest tests/ --cov=src --cov-report=term-missing   # with coverage (gate
 uv run ruff check src/ tests/                              # lint gate (must report 0 warnings)
 ```
 
-As of this commit: **203/203 tests pass, 100% coverage, 0 ruff warnings**. A full local match (`Hw6RaceSDK().run_local_match()`) now runs genuinely end-to-end, and its `GameResult` can be turned into a submission-schema-exact Internal Game JSON report and emailed (with a mocked send function in tests; real Gmail OAuth credentials are user-supplied, never fabricated) (config loader, version tracking, API Gatekeeper, import-safety checks, and the project-wide 150-line file check). Game logic is not yet present, so these numbers will shift as chunks 3–9 land — see `docs/05_testing_strategy.md`.
+As of this commit: **209/209 tests pass, 100% coverage, 0 ruff warnings**. A full local match (`Hw6RaceSDK().run_local_match()`) now runs genuinely end-to-end and is runnable directly from the CLI (`uv run python -m hw6_race.main`), and its `GameResult` can be turned into a submission-schema-exact Internal Game JSON report and emailed (with a mocked send function in tests; real Gmail OAuth credentials are user-supplied, never fabricated) (config loader, version tracking, API Gatekeeper, import-safety checks, and the project-wide 150-line file check). Game logic is not yet present, so these numbers will shift as chunks 3–9 land — see `docs/05_testing_strategy.md`.
 
 **Project rule**: every Python file in this repo (`src/`, `tests/`, `tools/`) is capped at 150 *physical* lines (blank lines and comments included) — stricter than the submission guidelines' 150-*logical*-line cap. Enforced by `tests/test_line_limits.py`, run as part of the normal test suite. See `docs/PLAN.md` ADR-006.
 
@@ -141,7 +146,7 @@ This repository is currently at the end of **Phase 0/1**: full requirement extra
 | 5 | Dual-agent race mechanism | ✅ done (grid, movement, barriers, capture/survival, scoring; Q-Learning stretch not attempted) |
 | 6 | Controller / orchestrator / game loop | ✅ done (`Hw6RaceSDK.run_local_match()` verified end-to-end; Technical Loss containment in place, full rerun-to-6 is Chunk 7) |
 | 7 | Logging, JSON protocol, run history, email | ✅ done (schemas, technical-loss algorithm, run logger, mailer — all tested; live-match rerun wiring flagged as a known limitation) |
-| 8 | CLI interface | 🟨 stub exists, delegates to SDK, SDK not yet implemented |
+| 8 | CLI interface | ✅ done (argparse, exit codes, output file, zero business logic) |
 | 9 | Tests (suite-level completion, coverage gate) | 🟨 ongoing per-chunk; suite-level pass pending chunks 3–8 |
 | 10 | Documentation finalization & submission packaging | 🟨 this README is a living document, finalized in chunk 10 |
 | 11 | Final validation against both PDFs | ⬜ not started |

@@ -48,10 +48,12 @@ async def take_turn(
 
     observation = observation_for(state, role)
     message = agent.compose_message(observation)
+    logger.info("[%s] move %d, at %s, says: %r", role.value, state.move_count + 1, observation.own_position, message)
     await own_client.send_message(message)
     await opponent_client.receive_message(message)
 
     action = agent.decide_action(observation)
+    logger.info("[%s] move %d, action: %s", role.value, state.move_count + 1, action)
     state.apply_action(role, action)
 
 

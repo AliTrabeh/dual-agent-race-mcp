@@ -1625,7 +1625,7 @@
     "acceptance": "`src/hw6_race/main.py` stays <=150 physical lines, has a matching test file, and is not reimplemented elsewhere.",
     "chunk": "8",
     "test_method": "Code review plus a dedicated unit test file",
-    "status": "In Progress"
+    "status": "Done"
   },
   {
     "category": "Module Responsibility",
@@ -1955,7 +1955,7 @@
     "acceptance": "A CLI smoke test or unit test verifies: Default run with no flags executes a full local match.",
     "chunk": "8",
     "test_method": "CLI smoke test in tests/integration/",
-    "status": "Not Started"
+    "status": "Done"
   },
   {
     "category": "CLI Behavior",
@@ -1966,7 +1966,7 @@
     "acceptance": "A CLI smoke test or unit test verifies: --config <path> overrides the default config file.",
     "chunk": "8",
     "test_method": "CLI smoke test in tests/integration/",
-    "status": "Not Started"
+    "status": "Done"
   },
   {
     "category": "CLI Behavior",
@@ -1977,7 +1977,7 @@
     "acceptance": "A CLI smoke test or unit test verifies: --dry-run validates config without starting agents.",
     "chunk": "8",
     "test_method": "CLI smoke test in tests/integration/",
-    "status": "Not Started"
+    "status": "Done"
   },
   {
     "category": "CLI Behavior",
@@ -1988,7 +1988,7 @@
     "acceptance": "A CLI smoke test or unit test verifies: --help prints usage information and exits 0.",
     "chunk": "8",
     "test_method": "CLI smoke test in tests/integration/",
-    "status": "Not Started"
+    "status": "Done"
   },
   {
     "category": "CLI Behavior",
@@ -1999,7 +1999,7 @@
     "acceptance": "A CLI smoke test or unit test verifies: --version prints the current package version and exits 0.",
     "chunk": "8",
     "test_method": "CLI smoke test in tests/integration/",
-    "status": "Not Started"
+    "status": "Done"
   },
   {
     "category": "CLI Behavior",
@@ -2010,7 +2010,7 @@
     "acceptance": "A CLI smoke test or unit test verifies: Missing config file produces a clear error and a non-zero exit code.",
     "chunk": "8",
     "test_method": "CLI smoke test in tests/integration/",
-    "status": "Not Started"
+    "status": "Done"
   },
   {
     "category": "CLI Behavior",
@@ -2021,7 +2021,7 @@
     "acceptance": "A CLI smoke test or unit test verifies: Malformed config file produces a clear ConfigError message.",
     "chunk": "8",
     "test_method": "CLI smoke test in tests/integration/",
-    "status": "Not Started"
+    "status": "Done"
   },
   {
     "category": "CLI Behavior",
@@ -2043,7 +2043,7 @@
     "acceptance": "A CLI smoke test or unit test verifies: A fully successful match run exits 0.",
     "chunk": "8",
     "test_method": "CLI smoke test in tests/integration/",
-    "status": "Not Started"
+    "status": "Done"
   },
   {
     "category": "CLI Behavior",
@@ -2054,7 +2054,7 @@
     "acceptance": "A CLI smoke test or unit test verifies: A match ending in unrecoverable Technical Loss exits non-zero.",
     "chunk": "8",
     "test_method": "CLI smoke test in tests/integration/",
-    "status": "Not Started"
+    "status": "Done"
   },
   {
     "category": "CLI Behavior",
@@ -2065,7 +2065,7 @@
     "acceptance": "A CLI smoke test or unit test verifies: --log-level overrides default logging verbosity.",
     "chunk": "8",
     "test_method": "CLI smoke test in tests/integration/",
-    "status": "Not Started"
+    "status": "Done"
   },
   {
     "category": "CLI Behavior",
@@ -2076,7 +2076,7 @@
     "acceptance": "A CLI smoke test or unit test verifies: --output-dir overrides where results/ JSON is written.",
     "chunk": "8",
     "test_method": "CLI smoke test in tests/integration/",
-    "status": "Not Started"
+    "status": "Done"
   },
   {
     "category": "CLI Behavior",
@@ -2087,7 +2087,7 @@
     "acceptance": "A CLI smoke test or unit test verifies: CLI prints a human-readable per-turn trace during the match.",
     "chunk": "8",
     "test_method": "CLI smoke test in tests/integration/",
-    "status": "Not Started"
+    "status": "Done"
   },
   {
     "category": "CLI Behavior",
@@ -2098,7 +2098,7 @@
     "acceptance": "A CLI smoke test or unit test verifies: CLI prints the final Internal Game JSON summary at match end.",
     "chunk": "8",
     "test_method": "CLI smoke test in tests/integration/",
-    "status": "Not Started"
+    "status": "Done"
   },
   {
     "category": "CLI Behavior",
@@ -2109,7 +2109,7 @@
     "acceptance": "A CLI smoke test or unit test verifies: CLI contains zero business logic, verified by code review.",
     "chunk": "8",
     "test_method": "CLI smoke test in tests/integration/",
-    "status": "Not Started"
+    "status": "Done"
   },
   {
     "category": "Error Handling Case",
@@ -3847,7 +3847,7 @@
     "acceptance": "`CLI main entry point`'s docstring states Input/Output/Setup and it has an independent, focused test file.",
     "chunk": "varies",
     "test_method": "Code review of docstring plus presence of a dedicated test file",
-    "status": "Not Started"
+    "status": "Done"
   },
   {
     "category": "Documentation Requirement",

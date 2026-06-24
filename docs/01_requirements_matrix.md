@@ -93,7 +93,7 @@ HW6/
 | SG-D05 | Docs-before-code work sequence | this conversation's phase order | 0,1 | ✅ |
 | SG-C01 | ≤150 lines/file | all `src/` files, enforced via review + script | all | ⬜ |
 | SG-C02 | Docstrings, naming, SRP, DRY | all `src/` files | all | ⬜ |
-| SG-C03 | SDK = single entry point | `sdk/sdk.py` | 2 | ✅ (`Hw6RaceSDK.run_local_match()` is the only call CLI/tests need; all logic delegated to `sdk/orchestrator.py` + `services/`) |
+| SG-C03 | SDK = single entry point | `sdk/sdk.py` | 2 | ✅ (`Hw6RaceSDK.run_local_match()` is the only call CLI/tests need; all logic delegated to `sdk/orchestrator.py` + `services/`; `main.py` verified to contain zero business logic in Chunk 8) |
 | SG-C04 | Zero duplication, mixins/base classes | `services/agents/base_agent.py`, mixins | 4 | ✅ (CopAgent/ThiefAgent share all logic via Template Method; only the barrier-aware prompt hook differs) |
 | SG-C05 | API Gatekeeper for all external calls | `shared/gatekeeper.py` | 2 | ✅ |
 | SG-C06 | Centralized rate-limit JSON | `config/rate_limits.json` | 2 | ✅ |

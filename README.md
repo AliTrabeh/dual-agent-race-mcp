@@ -1,7 +1,7 @@
 # HW6 — Dual AI Agent Race via MCP Servers (Cop/Thief Pursuit Game)
 
 **Course**: AI Agents / AI Orchestra — Assignment 6 ("Dual AI Agent Conversation via MCP Servers")
-**Status**: Chunks 0–9 complete (full local pipeline, 217/217 tests, 100% coverage). Chunk 10 (this document, cloud deployment guide) in progress — see [§10 Implementation Status](#10-implementation-status).
+**Status**: All 11 planned chunks complete. Full local pipeline, 217/217 tests, 100% coverage, 0 ruff warnings, verified via two independent fresh-clone tests. Real cloud deployment, Gmail OAuth, and the inter-group bonus round remain explicit user actions — see [§10 Implementation Status](#10-implementation-status) and [`docs/06_submission_checklist.md`](docs/06_submission_checklist.md).
 
 ## 1. Overview
 
@@ -201,8 +201,8 @@ HW6/
 | 7 | Logging, JSON protocol, run history, email | ✅ done (schemas, technical-loss algorithm, run logger, mailer — all tested; live-match rerun wiring flagged as a known limitation) |
 | 8 | CLI interface | ✅ done (argparse, exit codes, output file, zero business logic) |
 | 9 | Tests (suite-level completion, coverage gate) | ✅ done (staged sanity-check matrix across 6 grid sizes; 100% coverage sustained since Chunk 6) |
-| 10 | Documentation finalization & submission packaging | 🟨 README finalized (this commit); real cloud deployment is an actionable guide, not yet performed (requires a real cloud account — see §8) |
-| 11 | Final validation against both PDFs | ⬜ not started |
+| 10 | Documentation finalization & submission packaging | ✅ done (README finalized; real cloud deployment remains an actionable guide, not yet performed — requires a real cloud account, see §8) |
+| 11 | Final validation against both PDFs | ✅ done (requirements matrix re-audited row by row; ISO/IEC 25010 self-check performed; 522-entry PRD catalog tallied: 255 done, 240 not-started/future, 17 in progress) |
 
 ## 11. Configuration Guide
 

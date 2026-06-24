@@ -3165,7 +3165,7 @@
     "acceptance": "docs/06_submission_checklist.md records a brief Functional Suitability self-assessment note.",
     "chunk": "11",
     "test_method": "Manual self-assessment recorded in the submission checklist",
-    "status": "Not Started"
+    "status": "Done"
   },
   {
     "category": "ISO 25010 Quality Characteristic",
@@ -3176,7 +3176,7 @@
     "acceptance": "docs/06_submission_checklist.md records a brief Performance Efficiency self-assessment note.",
     "chunk": "11",
     "test_method": "Manual self-assessment recorded in the submission checklist",
-    "status": "Not Started"
+    "status": "Done"
   },
   {
     "category": "ISO 25010 Quality Characteristic",
@@ -3187,7 +3187,7 @@
     "acceptance": "docs/06_submission_checklist.md records a brief Compatibility self-assessment note.",
     "chunk": "11",
     "test_method": "Manual self-assessment recorded in the submission checklist",
-    "status": "Not Started"
+    "status": "Done"
   },
   {
     "category": "ISO 25010 Quality Characteristic",
@@ -3198,7 +3198,7 @@
     "acceptance": "docs/06_submission_checklist.md records a brief Usability self-assessment note.",
     "chunk": "11",
     "test_method": "Manual self-assessment recorded in the submission checklist",
-    "status": "Not Started"
+    "status": "Done"
   },
   {
     "category": "ISO 25010 Quality Characteristic",
@@ -3209,7 +3209,7 @@
     "acceptance": "docs/06_submission_checklist.md records a brief Reliability self-assessment note.",
     "chunk": "11",
     "test_method": "Manual self-assessment recorded in the submission checklist",
-    "status": "Not Started"
+    "status": "Done"
   },
   {
     "category": "ISO 25010 Quality Characteristic",
@@ -3220,7 +3220,7 @@
     "acceptance": "docs/06_submission_checklist.md records a brief Security self-assessment note.",
     "chunk": "11",
     "test_method": "Manual self-assessment recorded in the submission checklist",
-    "status": "Not Started"
+    "status": "Done"
   },
   {
     "category": "ISO 25010 Quality Characteristic",
@@ -3231,7 +3231,7 @@
     "acceptance": "docs/06_submission_checklist.md records a brief Maintainability self-assessment note.",
     "chunk": "11",
     "test_method": "Manual self-assessment recorded in the submission checklist",
-    "status": "Not Started"
+    "status": "Done"
   },
   {
     "category": "ISO 25010 Quality Characteristic",
@@ -3242,7 +3242,7 @@
     "acceptance": "docs/06_submission_checklist.md records a brief Portability self-assessment note.",
     "chunk": "11",
     "test_method": "Manual self-assessment recorded in the submission checklist",
-    "status": "Not Started"
+    "status": "Done"
   },
   {
     "category": "Parallelism Guidance",
@@ -3308,7 +3308,7 @@
     "acceptance": "Process review of the actual git history/log confirms: Commit history uses clear, meaningful messages (SG-U03).",
     "chunk": "all",
     "test_method": "Process/log review, not an automated test",
-    "status": "Not Started"
+    "status": "Done"
   },
   {
     "category": "Git Workflow Practice",
@@ -3352,7 +3352,7 @@
     "acceptance": "Process review of the actual git history/log confirms: Every significant AI-assisted prompt is recorded in docs/08_claude_work_log.md (SG-U04).",
     "chunk": "all",
     "test_method": "Process/log review, not an automated test",
-    "status": "Not Started"
+    "status": "Done"
   },
   {
     "category": "Bonus Round Rule",

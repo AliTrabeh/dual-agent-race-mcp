@@ -14,7 +14,8 @@ class AgentMCPClient:
     """Wraps fastmcp.Client, bound to one agent's server and auth token."""
 
     def __init__(self, server: FastMCP | str, token: str) -> None:
-        self._client = Client(server)
+        http_auth = token if isinstance(server, str) else None
+        self._client = Client(server, auth=http_auth)
         self._token = token
 
     async def __aenter__(self) -> "AgentMCPClient":

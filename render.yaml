@@ -9,7 +9,7 @@ services:
     runtime: docker
     dockerfilePath: ./Dockerfile
     dockerContext: .
-    dockerCommand: "--role cop"
+    dockerCommand: "uv run python -m hw6_race.services.mcp.run_server --role cop"
     envVars:
       - key: MCP_COP_AUTH_TOKEN
         sync: false
@@ -19,7 +19,7 @@ services:
     runtime: docker
     dockerfilePath: ./Dockerfile
     dockerContext: .
-    dockerCommand: "--role thief"
+    dockerCommand: "uv run python -m hw6_race.services.mcp.run_server --role thief"
     envVars:
       - key: MCP_THIEF_AUTH_TOKEN
         sync: false

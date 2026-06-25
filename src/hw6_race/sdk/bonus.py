@@ -6,7 +6,7 @@ import os
 from typing import Any
 
 from hw6_race.constants import DEFAULT_RATE_LIMITS_PATH
-from hw6_race.sdk import orchestrator, wiring
+from hw6_race.sdk import wiring
 from hw6_race.services.agents.llm_client import LLMClient
 from hw6_race.services.race.models import GameResult
 from hw6_race.services.reporting.bonus_report import InterGroupBonusReport
@@ -14,23 +14,6 @@ from hw6_race.shared.config import GameConfig
 from hw6_race.shared.gatekeeper import ApiGatekeeper, RateLimitConfig
 
 logger = logging.getLogger(__name__)
-
-
-async def _half_async(
-    config: GameConfig,
-    llm_client: LLMClient,
-    cop_url: str,
-    cop_token: str,
-    thief_url: str,
-    thief_token: str,
-) -> GameResult:
-    cop_agent, thief_agent = wiring.build_agents(config, llm_client)
-    cop_client, thief_client = wiring.build_explicit_remote_clients(
-        cop_url, cop_token, thief_url, thief_token
-    )
-    return await orchestrator.play_game_async(
-        config, thief_agent, cop_agent, thief_client, cop_client
-    )
 
 
 def build_bonus_sub_games(
@@ -64,6 +47,7 @@ def build_bonus_sub_games(
 
 def run_bonus_match(config: GameConfig, llm_client: LLMClient) -> None:
     """Run the 6-sub-game inter-group bonus round (§12.1) and email the result."""
+    from hw6_race.sdk.sync_play import play_cop_only_game_async, play_thief_only_game_async
     from hw6_race.services.reporting.mailer import MailerError, build_mailer_from_env
 
     other_cop_url = os.environ.get("BONUS_OTHER_MCP_COP_URL", "").strip()
@@ -81,30 +65,33 @@ def run_bonus_match(config: GameConfig, llm_client: LLMClient) -> None:
     other_cop_token = os.environ.get("BONUS_OTHER_MCP_COP_TOKEN", "").strip()
     other_thief_token = os.environ.get("BONUS_OTHER_MCP_THIEF_TOKEN", "").strip()
     three_game_config = GameConfig({**config.raw, "num_games": 3})
+    cop_agent, thief_agent = wiring.build_agents(three_game_config, llm_client)
 
     logger.info("Bonus — 3 games as Cop (our Cop MCP + their Thief MCP)")
-    cop_half = asyncio.run(_half_async(
-        three_game_config, llm_client,
-        our_cop_url, our_cop_token, other_thief_url, other_thief_token,
-    ))
+    our_cop_client, their_thief_client = wiring.build_explicit_remote_clients(
+        our_cop_url, our_cop_token, other_thief_url, other_thief_token
+    )
+    cop_half = asyncio.run(
+        play_cop_only_game_async(three_game_config, cop_agent, our_cop_client, their_thief_client)
+    )
+
     logger.info("Bonus — 3 games as Thief (their Cop MCP + our Thief MCP)")
-    thief_half = asyncio.run(_half_async(
-        three_game_config, llm_client,
-        other_cop_url, other_cop_token, our_thief_url, our_thief_token,
-    ))
+    their_cop_client, our_thief_client = wiring.build_explicit_remote_clients(
+        other_cop_url, other_cop_token, our_thief_url, our_thief_token
+    )
+    thief_half = asyncio.run(
+        play_thief_only_game_async(three_game_config, thief_agent, our_thief_client, their_cop_client)
+    )
 
     sub_games, our_total, their_total = build_bonus_sub_games(cop_half, thief_half)
     our_group = os.environ.get("GROUP_NAME", "hw6-group")
     other_group = os.environ.get("BONUS_OTHER_GROUP_NAME", "other-group")
     report = InterGroupBonusReport(
-        group_1_name=our_group,
-        group_2_name=other_group,
+        group_1_name=our_group, group_2_name=other_group,
         github_repo_group_1=os.environ.get("GITHUB_REPO", ""),
         github_repo_group_2=os.environ.get("BONUS_OTHER_GITHUB_REPO", ""),
-        mcp_url_group_1_cop=our_cop_url,
-        mcp_url_group_1_thief=our_thief_url,
-        mcp_url_group_2_cop=other_cop_url,
-        mcp_url_group_2_thief=other_thief_url,
+        mcp_url_group_1_cop=our_cop_url, mcp_url_group_1_thief=our_thief_url,
+        mcp_url_group_2_cop=other_cop_url, mcp_url_group_2_thief=other_thief_url,
         timezone=os.environ.get("TIMEZONE", "UTC"),
         students_group_1=[s.strip() for s in os.environ.get("STUDENTS", "Ali Trabeh").split(",")],
         students_group_2=[s.strip() for s in os.environ.get("BONUS_OTHER_STUDENTS", "").split(",") if s.strip()],

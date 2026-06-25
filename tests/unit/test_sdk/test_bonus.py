@@ -1,6 +1,6 @@
 """Tests for the inter-group bonus round runner (HW §12.1)."""
 
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
@@ -22,6 +22,17 @@ def _fake_result(cop: int = 20, thief: int = 5) -> GameResult:
 class _FakeLLM:
     def generate(self, prompt: str) -> str:
         return "ok"
+
+
+def _patch_wiring(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr(
+        bonus_mod.wiring, "build_agents",
+        MagicMock(return_value=(MagicMock(), MagicMock())),
+    )
+    monkeypatch.setattr(
+        bonus_mod.wiring, "build_explicit_remote_clients",
+        MagicMock(return_value=(MagicMock(), MagicMock())),
+    )
 
 
 def test_build_bonus_sub_games_attributes_cop_half_points_correctly() -> None:
@@ -60,9 +71,15 @@ def test_run_bonus_match_sends_report_when_configured(
     monkeypatch.setenv("BONUS_OTHER_MCP_COP_URL", "https://other-cop.example.com")
     monkeypatch.setenv("BONUS_OTHER_MCP_THIEF_URL", "https://other-thief.example.com")
     monkeypatch.setenv("BONUS_OTHER_GROUP_NAME", "TeamBeta")
-    monkeypatch.setattr("hw6_race.services.reporting.mailer.build_mailer_from_env", lambda gk: _FakeMailer())
+    monkeypatch.setattr(
+        "hw6_race.services.reporting.mailer.build_mailer_from_env", lambda gk: _FakeMailer()
+    )
+    _patch_wiring(monkeypatch)
 
-    with patch.object(bonus_mod, "_half_async", new=AsyncMock(return_value=_fake_result())):
+    with (
+        patch("hw6_race.sdk.sync_play.play_cop_only_game_async", new=AsyncMock(return_value=_fake_result())),
+        patch("hw6_race.sdk.sync_play.play_thief_only_game_async", new=AsyncMock(return_value=_fake_result())),
+    ):
         run_bonus_match(sample_game_config, _FakeLLM())
 
     assert len(sent) == 1
@@ -81,27 +98,16 @@ def test_run_bonus_match_swallows_mailer_errors(
 
     monkeypatch.setenv("BONUS_OTHER_MCP_COP_URL", "https://other-cop.example.com")
     monkeypatch.setenv("BONUS_OTHER_MCP_THIEF_URL", "https://other-thief.example.com")
-    monkeypatch.setattr("hw6_race.services.reporting.mailer.build_mailer_from_env", lambda gk: _FailMailer())
+    monkeypatch.setattr(
+        "hw6_race.services.reporting.mailer.build_mailer_from_env", lambda gk: _FailMailer()
+    )
+    _patch_wiring(monkeypatch)
 
-    with patch.object(bonus_mod, "_half_async", new=AsyncMock(return_value=_fake_result())):
+    with (
+        patch("hw6_race.sdk.sync_play.play_cop_only_game_async", new=AsyncMock(return_value=_fake_result())),
+        patch("hw6_race.sdk.sync_play.play_thief_only_game_async", new=AsyncMock(return_value=_fake_result())),
+    ):
         run_bonus_match(sample_game_config, _FakeLLM())  # must not raise
-
-
-def test_half_async_delegates_to_orchestrator(
-    monkeypatch: pytest.MonkeyPatch, sample_game_config: GameConfig
-) -> None:
-    import asyncio
-    from unittest.mock import AsyncMock, MagicMock
-
-    fake_result = GameResult(sub_games=[])
-    monkeypatch.setattr(bonus_mod.wiring, "build_agents", MagicMock(return_value=(MagicMock(), MagicMock())))
-    monkeypatch.setattr(bonus_mod.wiring, "build_explicit_remote_clients", MagicMock(return_value=(MagicMock(), MagicMock())))
-    monkeypatch.setattr(bonus_mod.orchestrator, "play_game_async", AsyncMock(return_value=fake_result))
-
-    result = asyncio.run(bonus_mod._half_async(
-        sample_game_config, _FakeLLM(), "cop-url", "cop-tok", "thief-url", "thief-tok"
-    ))
-    assert result is fake_result
 
 
 def test_run_bonus_match_logs_warning_when_gmail_not_configured(
@@ -111,6 +117,10 @@ def test_run_bonus_match_logs_warning_when_gmail_not_configured(
     monkeypatch.setenv("BONUS_OTHER_MCP_THIEF_URL", "https://other-thief.example.com")
     monkeypatch.delenv("GMAIL_OAUTH_CLIENT_SECRET_PATH", raising=False)
     monkeypatch.delenv("GMAIL_OAUTH_TOKEN_PATH", raising=False)
+    _patch_wiring(monkeypatch)
 
-    with patch.object(bonus_mod, "_half_async", new=AsyncMock(return_value=_fake_result())):
+    with (
+        patch("hw6_race.sdk.sync_play.play_cop_only_game_async", new=AsyncMock(return_value=_fake_result())),
+        patch("hw6_race.sdk.sync_play.play_thief_only_game_async", new=AsyncMock(return_value=_fake_result())),
+    ):
         run_bonus_match(sample_game_config, _FakeLLM())  # must not raise

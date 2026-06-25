@@ -52,11 +52,9 @@ def _update_opponent_position(
 
 
 def _action_from_state(old_pos, new_pos, old_b: int, new_b: int) -> dict:
-    if new_b > old_b:
-        return {"type": "barrier"}
+    if new_b > old_b: return {"type": "barrier"}
     dirs = {(-1, 0): "up", (1, 0): "down", (0, -1): "left", (0, 1): "right"}
-    direction = dirs.get((new_pos[0] - old_pos[0], new_pos[1] - old_pos[1]), "stay")
-    return {"type": "move", "direction": direction}
+    return {"type": "move", "direction": dirs.get((new_pos[0] - old_pos[0], new_pos[1] - old_pos[1]), "stay")}
 
 
 async def _play_one_role_sub_game(
@@ -118,7 +116,8 @@ async def play_cop_only_game_async(
     """Run `config.num_games` sub-games where we control the Cop."""
     result = GameResult()
     async with cop_client, thief_client:
-        for _ in range(config.num_games):
+        for i in range(config.num_games):
+            if i: await asyncio.sleep(3)
             cop_s, thief_s = default_start_positions(config)
             result.sub_games.append(
                 await _play_one_role_sub_game(
@@ -139,7 +138,8 @@ async def play_thief_only_game_async(
     """Run `config.num_games` sub-games where we control the Thief."""
     result = GameResult()
     async with thief_client, cop_client:
-        for _ in range(config.num_games):
+        for i in range(config.num_games):
+            if i: await asyncio.sleep(3)
             cop_s, thief_s = default_start_positions(config)
             result.sub_games.append(
                 await _play_one_role_sub_game(

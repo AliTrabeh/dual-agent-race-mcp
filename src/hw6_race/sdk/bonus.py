@@ -37,11 +37,15 @@ async def _barrier_sync(
     inbox reset in start_subgame clears the barrier messages automatically."""
     ready_text = f"READY:half:{half_index}:subgame:{sub_game_index}"
     async with _mcp_client(my_url, my_token) as my_c, _mcp_client(partner_url, partner_token) as partner_c:
+        # Deliver our ready signal to partner's server (no token arg needed on their server)
         await partner_c.call_tool("receive_message", {"from_agent": my_role, "text": ready_text})
         waited = 0.0
         while waited < 60.0:
             try:
-                msg = (await asyncio.wait_for(my_c.call_tool("read_message"), timeout=10.0)).data
+                # read_message on OUR server needs the token arg
+                msg = (await asyncio.wait_for(
+                    my_c.call_tool("read_message", {"token": my_token}), timeout=10.0
+                )).data
             except asyncio.TimeoutError:
                 msg = None
             if msg and msg.get("text") == ready_text:
@@ -52,11 +56,13 @@ async def _barrier_sync(
     raise RuntimeError(f"Barrier timeout: partner not ready for half {half_index} sub-game {sub_game_index}")
 
 
-async def _wait_for_new_message(c: Client, last_seen: dict | None) -> dict:
+async def _wait_for_new_message(c: Client, my_token: str, last_seen: dict | None) -> dict:
     waited = 0.0
     while waited < _MAX_WAIT:
         try:
-            msg = (await asyncio.wait_for(c.call_tool("read_message"), timeout=10.0)).data
+            msg = (await asyncio.wait_for(
+                c.call_tool("read_message", {"token": my_token}), timeout=10.0
+            )).data
         except asyncio.TimeoutError:
             msg = None
         if msg and msg != last_seen:
@@ -67,8 +73,8 @@ async def _wait_for_new_message(c: Client, last_seen: dict | None) -> dict:
     raise RuntimeError("Timed out waiting for opponent move (>300s)")
 
 
-async def _get_positions(my_c: Client, partner_c: Client) -> tuple[tuple, tuple]:
-    my_pos = tuple((await my_c.call_tool("report_location")).data["position"])
+async def _get_positions(my_c: Client, my_token: str, partner_c: Client) -> tuple[tuple, tuple]:
+    my_pos = tuple((await my_c.call_tool("report_location", {"token": my_token})).data["position"])
     opp_pos = tuple((await partner_c.call_tool("report_location")).data["position"])
     return my_pos, opp_pos
 
@@ -76,11 +82,12 @@ async def _get_positions(my_c: Client, partner_c: Client) -> tuple[tuple, tuple]
 async def _run_subgame(
     my_role: str,
     my_c: Client, partner_c: Client,
+    my_token: str,
     my_start: tuple[int, int],
     max_moves: int, max_barriers: int,
     scoring: dict, rng: random.Random,
 ) -> dict[str, Any]:
-    await my_c.call_tool("start_subgame", {"position": list(my_start)})
+    await my_c.call_tool("start_subgame", {"token": my_token, "position": list(my_start)})
 
     barriers_remaining = max_barriers if my_role == "cop" else 0
     my_barriers: list[list[int]] = []
@@ -90,8 +97,8 @@ async def _run_subgame(
 
     for round_num in range(1, max_moves + 1):
         if my_role == "cop":
-            last_seen = await _wait_for_new_message(my_c, last_seen)
-            my_pos, opp_pos = await _get_positions(my_c, partner_c)
+            last_seen = await _wait_for_new_message(my_c, my_token, last_seen)
+            my_pos, opp_pos = await _get_positions(my_c, my_token, partner_c)
             if my_pos == opp_pos:
                 captured, moves_taken = True, round_num
                 break
@@ -100,30 +107,30 @@ async def _run_subgame(
         rng.shuffle(dirs)
         moved = False
         for d in dirs:
-            res = (await my_c.call_tool("choose_action", {"action": {"type": "move", "direction": d}})).data
+            res = (await my_c.call_tool("choose_action", {"token": my_token, "action": {"type": "move", "direction": d}})).data
             if res.get("accepted"):
                 moved = True
                 break
         if not moved and my_role == "cop" and barriers_remaining > 0:
-            res = (await my_c.call_tool("choose_action", {"action": {"type": "place_barrier"}})).data
+            res = (await my_c.call_tool("choose_action", {"token": my_token, "action": {"type": "place_barrier"}})).data
             if res.get("accepted"):
-                my_pos, _ = await _get_positions(my_c, partner_c)
+                my_pos, _ = await _get_positions(my_c, my_token, partner_c)
                 my_barriers.append(list(my_pos))
                 await partner_c.call_tool("sync_barriers", {"barriers": my_barriers})
                 barriers_remaining -= 1
 
         msg_text = f"{my_role} moved (round {round_num})"
-        await my_c.call_tool("send_message", {"text": msg_text})
+        await my_c.call_tool("send_message", {"token": my_token, "text": msg_text})
         await partner_c.call_tool("receive_message", {"from_agent": my_role, "text": msg_text})
 
-        my_pos, opp_pos = await _get_positions(my_c, partner_c)
+        my_pos, opp_pos = await _get_positions(my_c, my_token, partner_c)
         if my_pos == opp_pos:
             captured, moves_taken = True, round_num
             break
 
         if my_role == "thief":
-            last_seen = await _wait_for_new_message(my_c, last_seen)
-            my_pos, opp_pos = await _get_positions(my_c, partner_c)
+            last_seen = await _wait_for_new_message(my_c, my_token, last_seen)
+            my_pos, opp_pos = await _get_positions(my_c, my_token, partner_c)
             if my_pos == opp_pos:
                 captured, moves_taken = True, round_num
                 break
@@ -147,8 +154,6 @@ async def _run_half_async(
     scoring: dict, grid_size: list[int],
     seed, half_index: int,
 ) -> list[dict[str, Any]]:
-    # Both sides derive positions from the same seed in the same order:
-    # cop_pos first, thief_pos second, per sub-game.
     rng = random.Random(str(seed))
     results = []
     for i in range(num_sub_games):
@@ -163,7 +168,7 @@ async def _run_half_async(
         my_start = cop_start if my_role == "cop" else thief_start
         print(f"  Sub-game {sub_game_index}/{num_sub_games} | my start: {my_start} | cop: {cop_start} | thief: {thief_start}")
         async with _mcp_client(my_url, my_token) as my_c, _mcp_client(partner_url, partner_token) as partner_c:
-            sg = await _run_subgame(my_role, my_c, partner_c, my_start,
+            sg = await _run_subgame(my_role, my_c, partner_c, my_token, my_start,
                                     max_moves, max_barriers, scoring, rng)
         sg["index"] = sub_game_index
         results.append(sg)

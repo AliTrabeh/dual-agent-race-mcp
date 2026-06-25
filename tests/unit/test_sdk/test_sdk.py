@@ -50,6 +50,18 @@ def test_send_match_report_sends_report_when_mailer_is_available(
     assert "group_name" in sent[0]
 
 
+def test_run_bonus_match_delegates_to_bonus_module(
+    sample_game_config: GameConfig, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    called: list = []
+    monkeypatch.setattr("hw6_race.sdk.bonus.run_bonus_match", lambda config, llm: called.append(True))
+
+    sdk = Hw6RaceSDK(config=sample_game_config, llm_client=_FakeLLMClient())
+    sdk.run_bonus_match()
+
+    assert called == [True]
+
+
 def test_send_match_report_swallows_mailer_errors(
     sample_game_config: GameConfig, monkeypatch: pytest.MonkeyPatch
 ) -> None:

@@ -110,6 +110,13 @@ def build_clients(auth_manager: TokenAuthManager) -> tuple[AgentMCPClient, Agent
     return cop_client, thief_client
 
 
+def build_explicit_remote_clients(
+    cop_url: str, cop_token: str, thief_url: str, thief_token: str
+) -> tuple[AgentMCPClient, AgentMCPClient]:
+    """Build MCP clients from explicit URLs and tokens (used by the bonus round)."""
+    return AgentMCPClient(cop_url, cop_token), AgentMCPClient(thief_url, thief_token)
+
+
 def build_clients_from_env(auth_manager: TokenAuthManager) -> tuple[AgentMCPClient, AgentMCPClient]:
     """Build Cop/Thief MCP clients from `MCP_COP_URL`/`MCP_THIEF_URL` (HW-F18)
     when both are set, pointing at real deployed servers (Deployment Stage 2)

@@ -75,6 +75,14 @@ def test_build_clients_returns_two_independently_bound_clients() -> None:
     assert cop_client is not thief_client
 
 
+def test_build_explicit_remote_clients_returns_two_distinct_clients() -> None:
+    cop_client, thief_client = wiring.build_explicit_remote_clients(
+        "https://cop.example.com", "cop-tok",
+        "https://thief.example.com", "thief-tok",
+    )
+    assert cop_client is not thief_client
+
+
 
 
 def test_build_llm_client_from_env_falls_back_to_stub_when_unset(

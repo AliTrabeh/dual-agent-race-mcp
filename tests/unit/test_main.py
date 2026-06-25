@@ -63,6 +63,35 @@ def test_main_runs_a_full_match_and_writes_output(
     assert "cop_total" not in capsys.readouterr().out  # summary uses the real schema, not ad-hoc keys
 
 
+def test_build_arg_parser_bonus_flag_defaults_to_false() -> None:
+    args = main_module.build_arg_parser().parse_args([])
+    assert args.bonus is False
+
+
+def test_main_bonus_flag_calls_run_bonus_match(
+    monkeypatch, sample_config_data, tmp_path
+) -> None:
+    config_path = tmp_path / "setup.json"
+    config_path.write_text(json.dumps(sample_config_data), encoding="utf-8")
+    called: list = []
+
+    class _FakeSDK:
+        def __init__(self, config=None) -> None:
+            pass
+
+        def run_bonus_match(self) -> None:
+            called.append(True)
+
+    monkeypatch.setattr(main_module, "Hw6RaceSDK", _FakeSDK)
+
+    exit_code = main_module.main(
+        ["--config", str(config_path), "--bonus", "--log-level", "WARNING"]
+    )
+
+    assert exit_code == 0
+    assert called == [True]
+
+
 def test_main_returns_nonzero_when_a_sub_game_is_a_technical_loss(monkeypatch, sample_config_data, tmp_path) -> None:
     config_path = tmp_path / "setup.json"
     config_path.write_text(json.dumps(sample_config_data), encoding="utf-8")

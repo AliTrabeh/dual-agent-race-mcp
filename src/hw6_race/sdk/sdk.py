@@ -94,6 +94,11 @@ class Hw6RaceSDK:
         except MailerError:
             logger.exception("Failed to email match report — check Gmail OAuth credentials")
 
+    def run_bonus_match(self) -> None:
+        """Run the inter-group bonus round (HW §12.1) and email the InterGroupBonusReport."""
+        from hw6_race.sdk.bonus import run_bonus_match as _run
+        _run(self._config, self._llm_client)
+
     async def _run_match_async(self, build_clients) -> GameResult:
         cop_agent, thief_agent = wiring.build_agents(self._config, self._llm_client)
         auth_manager = wiring.build_auth_manager()

@@ -39,6 +39,9 @@ def build_arg_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "--version", action="version", version=f"hw6_race {get_version()}"
     )
+    parser.add_argument(
+        "--bonus", action="store_true", help="Run inter-group bonus round (HW §12.1) instead of a regular match"
+    )
     return parser
 
 
@@ -85,6 +88,11 @@ def main(argv: list[str] | None = None) -> int:
         return 0
 
     sdk = Hw6RaceSDK(config=config)
+
+    if args.bonus:
+        sdk.run_bonus_match()
+        return 0
+
     result = sdk.run_match()
     _print_summary(result)
     output_path = _write_summary_file(args.output_dir, result)

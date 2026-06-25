@@ -11,15 +11,9 @@ stage is 2x2 — see docs/05_testing_strategy.md), where no move may be legal.
 from hw6_race.constants import AgentRole, MoveDirection
 from hw6_race.services.agents.models import ActionType, AgentAction, AgentObservation
 from hw6_race.services.agents.strategies.base import DecisionStrategy
+from hw6_race.services.agents.strategies.grid_utils import MOVE_DELTAS, stays_in_bounds
 
 _PRIORITY_ORDER = (MoveDirection.RIGHT, MoveDirection.DOWN, MoveDirection.LEFT, MoveDirection.UP)
-
-_DELTAS: dict[MoveDirection, tuple[int, int]] = {
-    MoveDirection.UP: (-1, 0),
-    MoveDirection.DOWN: (1, 0),
-    MoveDirection.LEFT: (0, -1),
-    MoveDirection.RIGHT: (0, 1),
-}
 
 
 class HeuristicStrategy(DecisionStrategy):
@@ -34,7 +28,7 @@ class HeuristicStrategy(DecisionStrategy):
 
     def _default_move(self, observation: AgentObservation) -> AgentAction:
         for direction in _PRIORITY_ORDER:
-            if self._stays_in_bounds(observation, direction):
+            if stays_in_bounds(observation, direction):
                 return AgentAction(action_type=ActionType.MOVE, direction=direction)
         return AgentAction(action_type=ActionType.MOVE, direction=_PRIORITY_ORDER[0])
 
@@ -46,9 +40,9 @@ class HeuristicStrategy(DecisionStrategy):
 
         candidates: list[tuple[int, MoveDirection]] = []
         for direction in _PRIORITY_ORDER:
-            if not self._stays_in_bounds(observation, direction):
+            if not stays_in_bounds(observation, direction):
                 continue
-            d_row, d_col = _DELTAS[direction]
+            d_row, d_col = MOVE_DELTAS[direction]
             distance = abs(row + d_row - target_row) + abs(col + d_col - target_col)
             candidates.append((distance, direction))
 
@@ -56,10 +50,3 @@ class HeuristicStrategy(DecisionStrategy):
             return None
         candidates.sort(key=lambda item: item[0], reverse=not seeking)
         return AgentAction(action_type=ActionType.MOVE, direction=candidates[0][1])
-
-    @staticmethod
-    def _stays_in_bounds(observation: AgentObservation, direction: MoveDirection) -> bool:
-        row, col = observation.own_position
-        d_row, d_col = _DELTAS[direction]
-        rows, cols = observation.grid_size
-        return 0 <= row + d_row < rows and 0 <= col + d_col < cols

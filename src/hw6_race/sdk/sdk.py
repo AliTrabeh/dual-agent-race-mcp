@@ -45,13 +45,25 @@ class Hw6RaceSDK:
         return self._config
 
     def run_local_match(self) -> GameResult:
-        """Run a full local 6-sub-game match and return the aggregated GameResult."""
-        return asyncio.run(self._run_local_match_async())
+        """Run a full 6-sub-game match against in-process MCP servers
+        (Deployment Stage 1) and return the aggregated GameResult. Always
+        local, regardless of `MCP_COP_URL`/`MCP_THIEF_URL` — use
+        `run_match()` for the env-driven Stage 1/Stage 2 behavior.
+        """
+        return asyncio.run(self._run_match_async(wiring.build_clients))
 
-    async def _run_local_match_async(self) -> GameResult:
+    def run_match(self) -> GameResult:
+        """Run a full 6-sub-game match, against real deployed MCP servers if
+        `MCP_COP_URL`/`MCP_THIEF_URL` are set (Deployment Stage 2), otherwise
+        against in-process servers (Stage 1) — a pure config change, never a
+        code change (mirrors how the LLM backend is selected).
+        """
+        return asyncio.run(self._run_match_async(wiring.build_clients_from_env))
+
+    async def _run_match_async(self, build_clients) -> GameResult:
         cop_agent, thief_agent = wiring.build_agents(self._config, self._llm_client)
         auth_manager = wiring.build_auth_manager()
-        cop_client, thief_client = wiring.build_clients(auth_manager)
+        cop_client, thief_client = build_clients(auth_manager)
         return await orchestrator.play_game_async(
             self._config, thief_agent, cop_agent, thief_client, cop_client
         )

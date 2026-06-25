@@ -108,3 +108,22 @@ def build_clients(auth_manager: TokenAuthManager) -> tuple[AgentMCPClient, Agent
     cop_client = AgentMCPClient(cop_server, LOCAL_COP_TOKEN)
     thief_client = AgentMCPClient(thief_server, LOCAL_THIEF_TOKEN)
     return cop_client, thief_client
+
+
+def build_clients_from_env(auth_manager: TokenAuthManager) -> tuple[AgentMCPClient, AgentMCPClient]:
+    """Build Cop/Thief MCP clients from `MCP_COP_URL`/`MCP_THIEF_URL` (HW-F18)
+    when both are set, pointing at real deployed servers (Deployment Stage 2)
+    with their matching `MCP_COP_AUTH_TOKEN`/`MCP_THIEF_AUTH_TOKEN` secrets;
+    otherwise falls back to `build_clients` (Stage 1, in-process, the
+    no-network default) — mirrors `build_llm_client_from_env`'s pattern so
+    deployment is a pure config change, never a code change.
+    """
+    cop_url = os.environ.get("MCP_COP_URL", "").strip()
+    thief_url = os.environ.get("MCP_THIEF_URL", "").strip()
+    if not (cop_url and thief_url):
+        return build_clients(auth_manager)
+
+    cop_token = os.environ.get("MCP_COP_AUTH_TOKEN", "").strip() or LOCAL_COP_TOKEN
+    thief_token = os.environ.get("MCP_THIEF_AUTH_TOKEN", "").strip() or LOCAL_THIEF_TOKEN
+    logger.info("Using remote MCP servers: %s, %s", cop_url, thief_url)
+    return AgentMCPClient(cop_url, cop_token), AgentMCPClient(thief_url, thief_token)

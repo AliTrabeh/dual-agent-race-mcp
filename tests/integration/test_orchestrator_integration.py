@@ -77,3 +77,13 @@ def test_hw6_race_sdk_run_local_match_completes_end_to_end() -> None:
         {"cop": result.total_cop_points, "thief": result.total_thief_points}
     )
     assert json.loads(serialized)["cop"] == result.total_cop_points
+
+
+def test_hw6_race_sdk_run_match_falls_back_to_local_without_remote_urls(monkeypatch) -> None:
+    monkeypatch.delenv("MCP_COP_URL", raising=False)
+    monkeypatch.delenv("MCP_THIEF_URL", raising=False)
+    sdk = Hw6RaceSDK()
+
+    result = sdk.run_match()
+
+    assert len(result.sub_games) == sdk.config.num_games

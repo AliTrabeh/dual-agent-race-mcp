@@ -39,7 +39,12 @@ asyncio_mode = "auto"
 
 [tool.coverage.run]
 source = ["src"]
-omit = ["src/hw6_race/main.py", "*/tests/*", "src/hw6_race/**/gui/*"]
+omit = [
+    "src/hw6_race/main.py",
+    "src/hw6_race/services/mcp/run_server.py",
+    "*/tests/*",
+    "src/hw6_race/**/gui/*",
+]
 
 [tool.coverage.report]
 fail_under = 85

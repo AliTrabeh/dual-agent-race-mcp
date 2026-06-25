@@ -84,7 +84,7 @@ def main(argv: list[str] | None = None) -> int:
         print(f"Config OK: grid_size={config.grid_size}, num_games={config.num_games}")
         return 0
 
-    result = Hw6RaceSDK(config=config).run_local_match()
+    result = Hw6RaceSDK(config=config).run_match()
     _print_summary(result)
     output_path = _write_summary_file(args.output_dir, result)
     print(f"Result written to {output_path}")

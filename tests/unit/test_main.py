@@ -45,7 +45,7 @@ def test_main_runs_a_full_match_and_writes_output(
         def __init__(self, config=None) -> None:
             self.config = config
 
-        def run_local_match(self) -> GameResult:
+        def run_match(self) -> GameResult:
             return _game_result(GameOutcome.COP_WIN)
 
     monkeypatch.setattr(main_module, "Hw6RaceSDK", _FakeSDK)
@@ -68,7 +68,7 @@ def test_main_returns_nonzero_when_a_sub_game_is_a_technical_loss(monkeypatch, s
         def __init__(self, config=None) -> None:
             pass
 
-        def run_local_match(self) -> GameResult:
+        def run_match(self) -> GameResult:
             return _game_result(GameOutcome.TECHNICAL_LOSS)
 
     monkeypatch.setattr(main_module, "Hw6RaceSDK", _FakeSDK)

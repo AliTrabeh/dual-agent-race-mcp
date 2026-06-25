@@ -43,6 +43,10 @@ def observation_for(
         barriers_remaining=barriers_remaining,
         role=role,
         believed_opponent_position=believed_opponent_position,
+        barriers=frozenset(state.barriers),
+        move_count=state.move_count,
+        max_moves=state.max_moves,
+        max_barriers=state.max_barriers,
     )
 
 

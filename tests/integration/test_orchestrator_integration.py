@@ -39,7 +39,7 @@ async def test_play_game_async_exchanges_messages_only_through_mcp(tmp_rate_limi
     rate_limits = RateLimitConfig.from_file(tmp_rate_limits_file)
     gatekeeper = ApiGatekeeper(rate_limits, service="default")
     llm_client = build_default_llm_client(gatekeeper)
-    cop_agent, thief_agent = build_agents(llm_client)
+    cop_agent, thief_agent = build_agents(config, llm_client)
     auth_manager = build_auth_manager()
 
     cop_store, thief_store = MessageStore(), MessageStore()

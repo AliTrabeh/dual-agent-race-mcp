@@ -69,7 +69,7 @@ async def test_stage_1_message_pipeline_is_lossless_on_the_smallest_grid() -> No
     rate_limits = RateLimitConfig.from_file("config/rate_limits.json")
     gatekeeper = ApiGatekeeper(rate_limits, service="llm")
     llm_client = build_default_llm_client(gatekeeper)
-    cop_agent, thief_agent = build_agents(llm_client)
+    cop_agent, thief_agent = build_agents(config, llm_client)
     auth_manager = build_auth_manager()
 
     cop_store, thief_store = MessageStore(), MessageStore()

@@ -2,7 +2,11 @@ import pytest
 
 from hw6_race.constants import AgentRole
 from hw6_race.sdk import wiring
+from hw6_race.services.agents.strategies.heuristic_strategy import HeuristicStrategy
+from hw6_race.services.agents.strategies.llm_strategy import LLMDecisionStrategy
+from hw6_race.services.agents.strategies.minimax.strategy import MinimaxDecisionStrategy
 from hw6_race.services.mcp.auth import AuthError
+from hw6_race.shared.config import GameConfig
 from hw6_race.shared.gatekeeper import ApiGatekeeper, RateLimitConfig
 
 
@@ -38,11 +42,31 @@ def test_build_auth_manager_tokens_are_role_specific() -> None:
         manager.verify(wiring.LOCAL_COP_TOKEN, AgentRole.THIEF.value)
 
 
-def test_build_agents_returns_correctly_roled_agents(gatekeeper) -> None:
+def test_build_agents_returns_correctly_roled_agents(gatekeeper, sample_game_config) -> None:
     llm_client = wiring.build_default_llm_client(gatekeeper)
-    cop_agent, thief_agent = wiring.build_agents(llm_client)
+    cop_agent, thief_agent = wiring.build_agents(sample_game_config, llm_client)
     assert cop_agent.role == AgentRole.COP
     assert thief_agent.role == AgentRole.THIEF
+
+
+def test_build_strategy_defaults_to_minimax(gatekeeper, sample_game_config) -> None:
+    llm_client = wiring.build_default_llm_client(gatekeeper)
+    strategy = wiring._build_strategy(sample_game_config, llm_client)
+    assert isinstance(strategy, MinimaxDecisionStrategy)
+
+
+def test_build_strategy_selects_llm(gatekeeper, sample_config_data) -> None:
+    llm_client = wiring.build_default_llm_client(gatekeeper)
+    config = GameConfig({**sample_config_data, "decision_strategy": "llm"})
+    strategy = wiring._build_strategy(config, llm_client)
+    assert isinstance(strategy, LLMDecisionStrategy)
+
+
+def test_build_strategy_selects_heuristic(gatekeeper, sample_config_data) -> None:
+    llm_client = wiring.build_default_llm_client(gatekeeper)
+    config = GameConfig({**sample_config_data, "decision_strategy": "heuristic"})
+    strategy = wiring._build_strategy(config, llm_client)
+    assert isinstance(strategy, HeuristicStrategy)
 
 
 def test_build_clients_returns_two_independently_bound_clients() -> None:

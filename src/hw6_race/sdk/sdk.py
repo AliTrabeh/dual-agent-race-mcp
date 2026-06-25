@@ -49,7 +49,7 @@ class Hw6RaceSDK:
         return asyncio.run(self._run_local_match_async())
 
     async def _run_local_match_async(self) -> GameResult:
-        cop_agent, thief_agent = wiring.build_agents(self._llm_client)
+        cop_agent, thief_agent = wiring.build_agents(self._config, self._llm_client)
         auth_manager = wiring.build_auth_manager()
         cop_client, thief_client = wiring.build_clients(auth_manager)
         return await orchestrator.play_game_async(

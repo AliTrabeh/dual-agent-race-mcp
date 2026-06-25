@@ -10,7 +10,9 @@
     "cop_loss": 5,
     "thief_loss": 5
   },
-  "decision_strategy": "heuristic",
+  "decision_strategy": "minimax",
+  "minimax_depth": 6,
+  "minimax_time_budget_seconds": 2.0,
   "group_name": "Team-Placeholder",
   "students": [],
   "github_repo": "https://github.com/REPLACE/REPLACE",

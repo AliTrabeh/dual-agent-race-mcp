@@ -13,12 +13,20 @@ from hw6_race.constants import AgentRole
 from hw6_race.services.agents.cop_agent import CopAgent
 from hw6_race.services.agents.llm_client import GatekeptLLMClient, LLMClient
 from hw6_race.services.agents.llm_providers import AnthropicCompleteFn
+from hw6_race.services.agents.strategies.base import DecisionStrategy
 from hw6_race.services.agents.strategies.heuristic_strategy import HeuristicStrategy
+from hw6_race.services.agents.strategies.llm_strategy import LLMDecisionStrategy
+from hw6_race.services.agents.strategies.minimax.strategy import (
+    DEFAULT_DEPTH,
+    DEFAULT_TIME_BUDGET_SECONDS,
+    MinimaxDecisionStrategy,
+)
 from hw6_race.services.agents.thief_agent import ThiefAgent
 from hw6_race.services.mcp.auth import TokenAuthManager
 from hw6_race.services.mcp.client import AgentMCPClient
 from hw6_race.services.mcp.server_a import create_cop_server
 from hw6_race.services.mcp.server_b import create_thief_server
+from hw6_race.shared.config import GameConfig
 from hw6_race.shared.gatekeeper import ApiGatekeeper
 
 LOCAL_COP_TOKEN = "local-cop-token"
@@ -65,9 +73,32 @@ def build_auth_manager() -> TokenAuthManager:
     return manager
 
 
-def build_agents(llm_client: LLMClient) -> tuple[CopAgent, ThiefAgent]:
-    """Build a Cop/Thief agent pair sharing one LLMClient and a heuristic strategy each."""
-    return CopAgent(llm_client, HeuristicStrategy()), ThiefAgent(llm_client, HeuristicStrategy())
+def _build_strategy(config: GameConfig, llm_client: LLMClient) -> DecisionStrategy:
+    """Select a DecisionStrategy from `config.raw['decision_strategy']` —
+    never hard-coded (HW-F25). Default 'minimax' (the strongest option);
+    'llm' asks the LLM directly (HW-F02); 'heuristic' is the simple fallback
+    rule on its own. Each call returns a fresh instance — strategies that
+    carry per-agent state (minimax's opponent-position estimate) must not be
+    shared between the Cop and the Thief.
+    """
+    name = config.raw.get("decision_strategy", "minimax")
+    if name == "minimax":
+        depth = config.raw.get("minimax_depth", DEFAULT_DEPTH)
+        budget = config.raw.get("minimax_time_budget_seconds", DEFAULT_TIME_BUDGET_SECONDS)
+        return MinimaxDecisionStrategy(depth=depth, time_budget_seconds=budget)
+    if name == "llm":
+        return LLMDecisionStrategy(llm_client)
+    return HeuristicStrategy()
+
+
+def build_agents(config: GameConfig, llm_client: LLMClient) -> tuple[CopAgent, ThiefAgent]:
+    """Build a Cop/Thief agent pair sharing one LLMClient, each with its own
+    config-selected decision strategy and its own strategy instance.
+    """
+    return (
+        CopAgent(llm_client, _build_strategy(config, llm_client)),
+        ThiefAgent(llm_client, _build_strategy(config, llm_client)),
+    )
 
 
 def build_clients(auth_manager: TokenAuthManager) -> tuple[AgentMCPClient, AgentMCPClient]:

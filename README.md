@@ -28,7 +28,7 @@ Formally, this is a 2-agent, partially-observable, decentralized pursuit problem
 
 The hardest engineering problem this assignment targets — named explicitly in the source PDF — is that the two agents are **independent, decoupled, and use free natural language with no shared protocol** to coordinate under partial observability. Three concrete consequences of that constraint shaped this implementation:
 
-**No rigid message schema.** Each agent's MCP server (`services/mcp/server_a.py`/`server_b.py`) exposes exactly three transport-level tools — `send_message`, `receive_message`, `get_inbox` — and none of them inspect, validate, or transform the text they carry. Both servers are built from one shared scaffold (`server_base.py`) precisely so neither could accidentally become a side channel for structured, non-NL information. `BaseAgent.interpret_message()` decodes and infers a believed opponent position every turn and keeps a running belief (updated only when a position is actually stated — an ambiguous reply preserves the last known good belief rather than discarding it); `HeuristicStrategy` then chases (Cop) or flees (Thief) via Manhattan distance once a belief exists, falling back to its original fixed-priority move otherwise. This was verified live with a real LLM: the Cop correctly parsed `(4, 4)` straight out of the Thief's free-text message ("I'm cornered near the edge of the grid at (4, 4)...") and used it. The strategy stays deliberately simple (no learning, no lookahead) — consistent with the assignment's own framing that orchestration quality, not strategic cleverness, is what's graded (HW-F03).
+**No rigid message schema.** Each agent's MCP server (`services/mcp/server_a.py`/`server_b.py`) exposes exactly three transport-level tools — `send_message`, `receive_message`, `get_inbox` — and none of them inspect, validate, or transform the text they carry. Both servers are built from one shared scaffold (`server_base.py`) precisely so neither could accidentally become a side channel for structured, non-NL information. `BaseAgent.interpret_message()` decodes and infers a believed opponent position every turn and keeps a running belief (updated only when a position is actually stated — an ambiguous reply preserves the last known good belief rather than discarding it); the configured `DecisionStrategy` (default: minimax search, see §11.1) then acts on that belief. This was verified live with a real LLM: the Cop correctly parsed `(4, 4)` straight out of the Thief's free-text message ("I'm cornered near the edge of the grid at (4, 4)...") and used it. Decision-making sophistication is config-selectable (`"heuristic"` remains available as the simplest, fully deterministic option) — consistent with the assignment's own framing that orchestration quality, not strategic cleverness, is what's graded (HW-F03).
 
 **Ambiguity is the default, not the exception.** Because there is no shared schema, an opponent's natural-language message may not state a position at all, may state one ambiguously, or — in this project's current configuration, which intentionally defaults to a safe, no-network LLM stub rather than ever making an unauthorized API call — may simply be a fixed placeholder string. `BaseAgent.interpret_message()` handles all three cases identically and without crashing: it asks the (stub or real) LLM to reply in a constrained `"ROW,COL"` / `"UNKNOWN"` format, and treats anything that doesn't parse as `confidence="ambiguous"` rather than raising. This graceful-degradation behavior was verified live, not just in a mock — running a full match with the default rate limits intentionally exhausted (a realistic constraint with any real paid LLM provider) showed dozens of `WARNING ... could not parse a position from LLM response: 'UNKNOWN'` lines, with the match still completing cleanly every time (see [§5 CLI Run Evidence](#5-cli-run-evidence)).
 
@@ -72,6 +72,7 @@ Required `.env` values (see `.env-example` for the full list and inline document
 A full local match, run with `uv run python -m hw6_race.main --log-level INFO`, produces a per-turn trace and a final JSON summary. Excerpt from an actual run (not reconstructed):
 
 ```text
+INFO hw6_race.sdk.wiring: No real LLM provider configured; using the safe no-network stub
 INFO hw6_race.sdk.orchestrator: [thief] move 1, at (4, 4), says: 'no comment'
 INFO hw6_race.sdk.orchestrator: [thief] move 1, action: AgentAction(action_type=<ActionType.MOVE: 'move'>, direction=<MoveDirection.LEFT: 'left'>)
 WARNING hw6_race.services.agents.base_agent: [cop] could not parse a position from LLM response: 'UNKNOWN'
@@ -83,18 +84,18 @@ INFO hw6_race.sdk.orchestrator: [cop] move 2, action: AgentAction(action_type=<A
 ```json
 {
   "sub_games": [
-    { "index": 1, "outcome": "cop_win", "move_count": 16, "cop_points": 20, "thief_points": 5 },
-    { "index": 2, "outcome": "cop_win", "move_count": 16, "cop_points": 20, "thief_points": 5 },
-    { "index": 3, "outcome": "cop_win", "move_count": 16, "cop_points": 20, "thief_points": 5 },
-    { "index": 4, "outcome": "cop_win", "move_count": 16, "cop_points": 20, "thief_points": 5 },
-    { "index": 5, "outcome": "cop_win", "move_count": 16, "cop_points": 20, "thief_points": 5 },
-    { "index": 6, "outcome": "cop_win", "move_count": 16, "cop_points": 20, "thief_points": 5 }
+    { "index": 1, "outcome": "thief_win", "move_count": 25, "cop_points": 5, "thief_points": 10 },
+    { "index": 2, "outcome": "thief_win", "move_count": 25, "cop_points": 5, "thief_points": 10 },
+    { "index": 3, "outcome": "thief_win", "move_count": 25, "cop_points": 5, "thief_points": 10 },
+    { "index": 4, "outcome": "thief_win", "move_count": 25, "cop_points": 5, "thief_points": 10 },
+    { "index": 5, "outcome": "thief_win", "move_count": 25, "cop_points": 5, "thief_points": 10 },
+    { "index": 6, "outcome": "thief_win", "move_count": 25, "cop_points": 5, "thief_points": 10 }
   ],
-  "totals": { "cop": 120, "thief": 30 }
+  "totals": { "cop": 30, "thief": 60 }
 }
 ```
 
-This is deterministic under the default configuration (the no-network LLM stub and `HeuristicStrategy` are both fully deterministic), and the totals land exactly on the `w=6` (all-Cop-wins) edge of the bound derived for a fixed-role local match (`cop_total = 15w + 30`, `thief_total = 60 − 5w`; see `docs/prds/PRD-003-dual-agent-race-logic.md`). With a real LLM provider configured, both the messages and the outcomes become genuinely non-deterministic.
+This is deterministic under the default configuration, but for a reason worth explaining rather than glossing over: the no-network LLM stub's `interpret_message` always returns `'UNKNOWN'`, so neither agent's belief of the opponent's position ever updates past a one-time default guess for the whole match — this affects `HeuristicStrategy`'s chase/flee *and* the default `MinimaxDecisionStrategy` equally, since both depend on the same belief. The totals land exactly on the `w=0` (all-Thief-wins) edge of the bound derived for a fixed-role local match (`cop_total = 15w + 30`, `thief_total = 60 − 5w`; see `docs/prds/PRD-003-dual-agent-race-logic.md`). With a real LLM provider configured, beliefs are refined every turn from genuine NL inference, and minimax's search-based decisions meaningfully change the outcome — confirmed by `tools/simulate_strategies.py`'s ground-truth-belief benchmark (§11.1), where a Minimax Cop reliably wins. With a real LLM provider configured, both the messages and the outcomes become genuinely non-deterministic.
 
 ## 6. Usage
 
@@ -205,6 +206,8 @@ HW6/
 | 9 | Tests (suite-level completion, coverage gate) | ✅ done (staged sanity-check matrix across 6 grid sizes; 100% coverage sustained since Chunk 6) |
 | 10 | Documentation finalization & submission packaging | ✅ done (README finalized; real cloud deployment remains an actionable guide, not yet performed — requires a real cloud account, see §8) |
 | 11 | Final validation against both PDFs | ✅ done (requirements matrix re-audited row by row; ISO/IEC 25010 self-check performed; 522-entry PRD catalog tallied: 255 done, 240 not-started/future, 17 in progress) |
+| 12 | LLM-driven decision strategy | ✅ done (`LLMDecisionStrategy`: the LLM picks the action directly, falls back to `HeuristicStrategy` on any parse failure) |
+| 13 | Minimax + alpha-beta competitive decision strategy | ✅ done (`MinimaxDecisionStrategy`: depth-limited minimax + alpha-beta + move ordering + transposition table, new default; see §11.1) |
 
 ## 11. Configuration Guide
 
@@ -217,9 +220,21 @@ All game parameters live in `config/setup.json` — never hard-coded in source:
 | `num_games` | `6` | Sub-games per full match |
 | `max_barriers` | `5` | Max barriers the Cop may place per sub-game |
 | `scoring.cop_win` / `scoring.thief_win` / `scoring.cop_loss` / `scoring.thief_loss` | `20 / 10 / 5 / 5` | Points awarded per sub-game outcome |
-| `decision_strategy` | `"heuristic"` | `"heuristic"` or `"q_learning"` (see `docs/PRD_q_learning.md`) |
+| `decision_strategy` | `"minimax"` | `"minimax"` (default), `"llm"`, or `"heuristic"` |
+| `minimax_depth` | `6` | Plies searched ahead by `MinimaxDecisionStrategy` |
+| `minimax_time_budget_seconds` | `2.0` | Per-decision search time budget before falling back to the heuristic |
 
 Rate limits for all outbound API calls (LLM provider, Gmail) live in `config/rate_limits.json` and are enforced centrally by `shared/gatekeeper.py`'s `ApiGatekeeper` — no call site implements its own rate limiting.
+
+### 11.1 Decision strategies (Cop/Thief move selection)
+
+Three interchangeable `DecisionStrategy` implementations, selected by `decision_strategy` above — swapping one for another requires no change to `BaseAgent` or either concrete agent class (ADR-003):
+
+- **`minimax`** (default) — `services/agents/strategies/minimax/`: depth-limited minimax with alpha-beta pruning, move ordering, and a transposition table. The Cop reasons several turns ahead as a trapper/hunter (immediate capture, then shortest-path distance, Thief-mobility reduction, Thief-reachable-area reduction); the Thief reasons as a survivor (avoiding immediate capture, maximizing future safe moves/reachable area/escape flexibility). Both search against the agent's own *belief* of the opponent's position (`board_utils.make_belief_state`), never the engine's ground truth — preserving the Dec-POMDP partial-observability boundary (§2). Falls back to a one-ply heuristic (`fallback.py`) if search times out or raises; never crashes, never returns an illegal action.
+  - **Honest finding on barriers**: the engine's real rule (HW PDF, unchanged since Chunk 5) is that a barrier blocks *only* the Cop, never the Thief. A well-reasoned Cop therefore almost never places one — it can only restrict its own future movement, never the Thief's. This is correct, faithful behavior given the actual game rule, not a bug in the strategy.
+  - Benchmarked with `tools/simulate_strategies.py` (`uv run python tools/simulate_strategies.py --games 20 --grid 5`): a Minimax Cop beats a Heuristic or Random Thief in ~6 turns (3×3) / ~14 turns (5×5) with zero illegal actions; a Heuristic or Random Cop *never* catches a Minimax Thief — the lookahead lets it evade indefinitely. The benchmark feeds each strategy the ground-truth opponent position directly (bypassing MCP/LLM/NL-inference) to isolate search-algorithm quality from inference noise, which is verified separately by the staged sanity checks (§5).
+- **`llm`** — `services/agents/strategies/llm_strategy.py`: asks the LLM to choose the action directly each turn, falling back to `heuristic` on any unparseable/illegal reply.
+- **`heuristic`** — `services/agents/strategies/heuristic_strategy.py`: deterministic fixed-priority movement, chasing/fleeing via Manhattan distance once a belief exists. No learning, no lookahead — the simplest option, useful as a fast, fully deterministic baseline.
 
 ## 12. Contribution Guidelines
 

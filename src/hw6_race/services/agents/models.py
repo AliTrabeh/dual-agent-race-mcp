@@ -35,6 +35,12 @@ class AgentObservation:
     construction sites (and DecisionStrategy implementations that ignore
     inferred beliefs) keep working unchanged — HeuristicStrategy only chases
     or flees once a real belief is actually present (HW-F02).
+
+    `barriers`/`move_count`/`max_moves`/`max_barriers` are physical board/rule
+    facts, not hidden state — every barrier is a visible board feature (and
+    the Cop placed all of them itself anyway), and the move budget is a known
+    rule, not the opponent's secret position. Exposing these does not break
+    partial observability; only `believed_opponent_position` is ever a guess.
     """
 
     own_position: tuple[int, int]
@@ -43,6 +49,10 @@ class AgentObservation:
     inbox: tuple[str, ...] = ()
     role: AgentRole | None = None
     believed_opponent_position: tuple[int, int] | None = None
+    barriers: frozenset[tuple[int, int]] = frozenset()
+    move_count: int = 0
+    max_moves: int = 0
+    max_barriers: int = 0
 
 
 @dataclass(frozen=True)

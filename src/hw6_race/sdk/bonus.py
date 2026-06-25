@@ -68,20 +68,20 @@ def run_bonus_match(config: GameConfig, llm_client: LLMClient) -> None:
     cop_agent, thief_agent = wiring.build_agents(three_game_config, llm_client)
 
     from hw6_race.constants import AgentRole
-    logger.info("Bonus — 3 games as Cop (our Cop MCP + their Thief MCP)")
-    our_cop_client, their_thief_client = wiring.build_bonus_round_clients(
-        our_cop_url, our_cop_token, other_thief_url, other_thief_token, AgentRole.COP
-    )
-    cop_half = asyncio.run(
-        play_cop_only_game_async(three_game_config, cop_agent, our_cop_client, their_thief_client)
-    )
-
     logger.info("Bonus — 3 games as Thief (their Cop MCP + our Thief MCP)")
     our_thief_client, their_cop_client = wiring.build_bonus_round_clients(
         our_thief_url, our_thief_token, other_cop_url, other_cop_token, AgentRole.THIEF
     )
     thief_half = asyncio.run(
         play_thief_only_game_async(three_game_config, thief_agent, our_thief_client, their_cop_client)
+    )
+
+    logger.info("Bonus — 3 games as Cop (our Cop MCP + their Thief MCP)")
+    our_cop_client, their_thief_client = wiring.build_bonus_round_clients(
+        our_cop_url, our_cop_token, other_thief_url, other_thief_token, AgentRole.COP
+    )
+    cop_half = asyncio.run(
+        play_cop_only_game_async(three_game_config, cop_agent, our_cop_client, their_thief_client)
     )
 
     sub_games, our_total, their_total = build_bonus_sub_games(cop_half, thief_half)

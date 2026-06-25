@@ -35,3 +35,16 @@ def test_outbox_log_returns_a_copy_not_a_live_reference() -> None:
     log = store.outbox_log()
     log.append("mutated externally")
     assert store.outbox_log() == ["outgoing"]
+
+
+def test_drain_outbox_one_returns_oldest_and_removes_it() -> None:
+    store = MessageStore()
+    store.send("first")
+    store.send("second")
+    assert store.drain_outbox_one() == "first"
+    assert store.drain_outbox_one() == "second"
+
+
+def test_drain_outbox_one_returns_none_when_outbox_is_empty() -> None:
+    store = MessageStore()
+    assert store.drain_outbox_one() is None

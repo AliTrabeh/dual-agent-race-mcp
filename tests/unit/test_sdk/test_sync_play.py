@@ -9,6 +9,7 @@ from _orchestrator_doubles import FakeAgent, FakeMCPClient
 from hw6_race.constants import AgentRole, GameOutcome, MoveDirection
 from hw6_race.sdk import sync_play as sp_mod
 from hw6_race.sdk.sync_play import (
+    _action_from_state,
     _play_one_role_sub_game,
     _update_opponent_position,
     play_cop_only_game_async,
@@ -113,6 +114,18 @@ async def test_play_one_role_processes_opponent_message_and_ends_game() -> None:
         FakeMCPClient(inbox=["Thief at 2,3"]), FakeMCPClient(), (0, 0), (4, 4), 30.0,
     )
     assert result.outcome == GameOutcome.THIEF_WIN
+
+
+def test_action_from_state_returns_barrier_when_barriers_increase() -> None:
+    assert _action_from_state((1, 1), (1, 1), 0, 1) == {"type": "barrier"}
+
+
+def test_action_from_state_returns_move_direction() -> None:
+    assert _action_from_state((1, 1), (1, 2), 0, 0) == {"type": "move", "direction": "right"}
+
+
+def test_action_from_state_returns_stay_for_unchanged_position() -> None:
+    assert _action_from_state((2, 2), (2, 2), 0, 0) == {"type": "move", "direction": "stay"}
 
 
 @pytest.mark.parametrize("runner,outcome", [

@@ -51,6 +51,14 @@ def _update_opponent_position(
             state.cop_position = inference.believed_position
 
 
+def _action_from_state(old_pos, new_pos, old_b: int, new_b: int) -> dict:
+    if new_b > old_b:
+        return {"type": "barrier"}
+    dirs = {(-1, 0): "up", (1, 0): "down", (0, -1): "left", (0, 1): "right"}
+    direction = dirs.get((new_pos[0] - old_pos[0], new_pos[1] - old_pos[1]), "stay")
+    return {"type": "move", "direction": direction}
+
+
 async def _play_one_role_sub_game(
     config: GameConfig,
     our_agent: BaseAgent,
@@ -63,6 +71,7 @@ async def _play_one_role_sub_game(
 ) -> SubGameResult:
     """One sub-game where we control `our_role` and wait for the opponent's turns."""
     opp_role = AgentRole.THIEF if our_role == AgentRole.COP else AgentRole.COP
+    _us = cop_start if our_role == AgentRole.COP else thief_start
     state = RaceState(
         grid_size=config.grid_size,
         max_moves=config.max_moves,
@@ -70,11 +79,19 @@ async def _play_one_role_sub_game(
         cop_position=cop_start,
         thief_position=thief_start,
     )
+    await own_client.init_bonus_subgame(_us)
+    await opponent_client.start_subgame(_us)
     outcome = state.check_outcome()
     while outcome is None:
         for role in (AgentRole.THIEF, AgentRole.COP):  # Thief moves first (HW-F04)
             if role == our_role:
+                _old = state.cop_position if role == AgentRole.COP else state.thief_position
+                _old_b = state.barriers_placed
                 await orchestrator.take_turn(state, role, our_agent, own_client, opponent_client)
+                _new = state.cop_position if role == AgentRole.COP else state.thief_position
+                _act = _action_from_state(_old, _new, _old_b, state.barriers_placed)
+                await opponent_client.choose_action(_act)
+                await own_client.set_bonus_position(_new)
             else:
                 msg = await wait_for_opponent_message(own_client, timeout)
                 if msg is None:

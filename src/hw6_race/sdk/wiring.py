@@ -23,7 +23,7 @@ from hw6_race.services.agents.strategies.minimax.strategy import (
 )
 from hw6_race.services.agents.thief_agent import ThiefAgent
 from hw6_race.services.mcp.auth import TokenAuthManager
-from hw6_race.services.mcp.client import AgentMCPClient
+from hw6_race.services.mcp.client import AgentMCPClient, BonusOpponentClient
 from hw6_race.services.mcp.server_a import create_cop_server
 from hw6_race.services.mcp.server_b import create_thief_server
 from hw6_race.shared.config import GameConfig
@@ -108,6 +108,17 @@ def build_clients(auth_manager: TokenAuthManager) -> tuple[AgentMCPClient, Agent
     cop_client = AgentMCPClient(cop_server, LOCAL_COP_TOKEN)
     thief_client = AgentMCPClient(thief_server, LOCAL_THIEF_TOKEN)
     return cop_client, thief_client
+
+
+def build_bonus_round_clients(
+    our_url: str, our_token: str,
+    their_url: str, their_token: str,
+    our_role: AgentRole,
+) -> tuple[AgentMCPClient, BonusOpponentClient]:
+    """Build own AgentMCPClient + BonusOpponentClient for the inter-group bonus round."""
+    own = AgentMCPClient(our_url, our_token)
+    opp = BonusOpponentClient(their_url, their_token, our_role)
+    return own, opp
 
 
 def build_explicit_remote_clients(

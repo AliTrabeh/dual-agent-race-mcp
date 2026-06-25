@@ -32,6 +32,10 @@ class MessageStore:
         messages, self._inbox = self._inbox, []
         return messages
 
+    def drain_outbox_one(self) -> str | None:
+        """Return and remove the oldest outbound message (for opponent's read_message)."""
+        return self._outbox_log.pop(0) if self._outbox_log else None
+
     def outbox_log(self) -> list[str]:
         """Return a copy of every message ever sent, for audit purposes."""
         return list(self._outbox_log)

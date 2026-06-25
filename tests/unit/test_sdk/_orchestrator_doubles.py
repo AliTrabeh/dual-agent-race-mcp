@@ -52,6 +52,18 @@ class FakeMCPClient:
         self.received.append(text)
         return "delivered"
 
+    async def init_bonus_subgame(self, position: tuple) -> None:
+        pass
+
+    async def start_subgame(self, position: tuple) -> dict:
+        return {"ok": True}
+
+    async def choose_action(self, action: dict) -> dict:
+        return {"accepted": True}
+
+    async def set_bonus_position(self, pos: tuple) -> None:
+        pass
+
     async def __aenter__(self) -> "FakeMCPClient":
         return self
 

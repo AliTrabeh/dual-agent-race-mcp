@@ -30,7 +30,7 @@ def _patch_wiring(monkeypatch: pytest.MonkeyPatch) -> None:
         MagicMock(return_value=(MagicMock(), MagicMock())),
     )
     monkeypatch.setattr(
-        bonus_mod.wiring, "build_explicit_remote_clients",
+        bonus_mod.wiring, "build_bonus_round_clients",
         MagicMock(return_value=(MagicMock(), MagicMock())),
     )
 

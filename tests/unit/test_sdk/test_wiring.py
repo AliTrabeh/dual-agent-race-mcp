@@ -83,6 +83,20 @@ def test_build_explicit_remote_clients_returns_two_distinct_clients() -> None:
     assert cop_client is not thief_client
 
 
+def test_build_bonus_round_clients_returns_own_and_bonus_opponent() -> None:
+    from hw6_race.constants import AgentRole
+    from hw6_race.services.mcp.client import BonusOpponentClient
+
+    own, opp = wiring.build_bonus_round_clients(
+        "https://our.example.com", "our-tok",
+        "https://their.example.com", "their-tok",
+        AgentRole.COP,
+    )
+    assert isinstance(opp, BonusOpponentClient)
+    assert opp._our_role == AgentRole.COP
+    assert own._token == "our-tok"
+
+
 
 
 def test_build_llm_client_from_env_falls_back_to_stub_when_unset(

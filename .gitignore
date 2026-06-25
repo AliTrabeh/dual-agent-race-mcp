@@ -20,6 +20,7 @@ venv/
 
 # IDE
 .idea/
+.claude/
 
 # Generated outputs (kept as a directory via .gitkeep, contents ignored)
 outputs/*

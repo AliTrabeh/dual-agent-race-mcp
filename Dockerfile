@@ -14,6 +14,6 @@ RUN uv sync --frozen --no-dev
 ENV PORT=8080
 EXPOSE 8080
 
-# --role (cop|thief) is supplied per Cloud Run service at deploy time —
-# see tools/deploy_cloud_run.sh. One image serves both roles.
+# --role (cop|thief) is supplied per deployed service at deploy time (e.g.
+# render.yaml's dockerCommand). One image serves both roles.
 ENTRYPOINT ["uv", "run", "python", "-m", "hw6_race.services.mcp.run_server"]

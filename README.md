@@ -1,7 +1,7 @@
 # HW6 — Dual AI Agent Race via MCP Servers (Cop/Thief Pursuit Game)
 
 **Course**: AI Agents / AI Orchestra — Assignment 6 ("Dual AI Agent Conversation via MCP Servers")
-**Status**: All 11 planned chunks complete, plus LLM-driven and minimax decision strategies (Chunks 12-13) and the Cloud Run deployment path (Chunk 14). Full local pipeline, 342/342 tests, 100% coverage, 0 ruff warnings, verified via two independent fresh-clone tests. Real cloud deployment requires running `tools/deploy_cloud_run.sh` with your own GCP credentials; Gmail OAuth and the inter-group bonus round remain explicit user actions — see [§10 Implementation Status](#10-implementation-status) and [`docs/06_submission_checklist.md`](docs/06_submission_checklist.md).
+**Status**: All 11 planned chunks complete, plus LLM-driven and minimax decision strategies (Chunks 12-13) and the cloud deployment path on Render (Chunk 14). Full local pipeline, 342/342 tests, 100% coverage, 0 ruff warnings, verified via two independent fresh-clone tests. Real cloud deployment requires deploying `render.yaml` as a Blueprint with your own Render account; Gmail OAuth and the inter-group bonus round remain explicit user actions — see [§10 Implementation Status](#10-implementation-status) and [`docs/06_submission_checklist.md`](docs/06_submission_checklist.md).
 
 ## 1. Overview
 
@@ -138,19 +138,14 @@ The HW PDF (§6) calls for a 3-stage rollout. Stages are pure config/deployment 
 
 **Stage 1 — Local (done, default)**: both MCP servers run in-process, started automatically by `Hw6RaceSDK`. No setup needed beyond `uv sync`.
 
-**Stage 2 — Cloud (Google Cloud Run)**: the code for this stage is built and tested; the actual deployment requires *your* cloud account and credentials, so it's a step you run yourself. Both servers run the same code as Stage 1 — only the transport changes, from an in-process `FastMCP` instance to a real HTTP URL, which `fastmcp.Client`/`AgentMCPClient` already support natively (no code branch per stage).
+**Stage 2 — Cloud (Render)**: the code for this stage is built and tested; the actual deployment requires *your* Render account, so it's a step you run yourself. Both servers run the same code as Stage 1 — only the transport changes, from an in-process `FastMCP` instance to a real HTTP URL, which `fastmcp.Client`/`AgentMCPClient` already support natively (no code branch per stage).
 
-1. **Standalone server entry point**: `services/mcp/run_server.py` builds one role's server and binds it to a real port: `uv run python -m hw6_race.services.mcp.run_server --role cop --port 8080`. Each role's auth token comes from `MCP_COP_AUTH_TOKEN`/`MCP_THIEF_AUTH_TOKEN` (HW-F17) — the process refuses to start without one (no default/placeholder token in production).
-2. **Containerized**: `Dockerfile` (repo root) builds one shared image for both roles; `--role` is supplied per Cloud Run service at deploy time, not baked into the image.
-3. **Deploy**: install the [gcloud CLI](https://cloud.google.com/sdk/docs/install), then:
-   ```bash
-   gcloud auth login
-   gcloud config set project YOUR_PROJECT_ID
-   tools/deploy_cloud_run.sh        # builds, pushes, and deploys both services
-   ```
-   The script prints the two service URLs and auth tokens it generated (or reused from `MCP_COP_AUTH_TOKEN`/`MCP_THIEF_AUTH_TOKEN` if already set) — add them to your `.env` as `MCP_COP_URL`/`MCP_THIEF_URL`/`MCP_COP_AUTH_TOKEN`/`MCP_THIEF_AUTH_TOKEN` (HW-F18: exactly 2 URLs per group).
-4. **Run against the deployed servers**: `uv run python -m hw6_race.main` — `Hw6RaceSDK.run_match()` (used by the CLI) automatically connects to `MCP_COP_URL`/`MCP_THIEF_URL` when both are set, falling back to in-process servers otherwise (`wiring.build_clients_from_env`, mirroring how the LLM backend is selected) — a pure config change, never a code change.
-5. Cloud Run services are deployed `--allow-unauthenticated` at the *platform* level (the URL itself is publicly reachable over HTTPS), but every tool call still requires the real `MCP_COP_AUTH_TOKEN`/`MCP_THIEF_AUTH_TOKEN` at the *application* level (`TokenAuthManager`) — satisfying HW-F17 without depending on Cloud IAM. Do not run/test the servers from a hardened organizational network on non-standard ports (HW PDF §5.2).
+1. **Standalone server entry point**: `services/mcp/run_server.py` builds one role's server and binds it to a real port: `uv run python -m hw6_race.services.mcp.run_server --role cop --port 8080`. Each role's auth token comes from `MCP_COP_AUTH_TOKEN`/`MCP_THIEF_AUTH_TOKEN` (HW-F17) — the process refuses to start without one (no default/placeholder token in production). It also respects Render's `PORT` env var automatically.
+2. **Containerized**: `Dockerfile` (repo root) builds one shared image for both roles; `--role` is supplied per deployed service, not baked into the image.
+3. **Deploy via the committed Blueprint**: `render.yaml` (repo root) declares both services from the one Dockerfile. In the [Render dashboard](https://dashboard.render.com/): **New + → Blueprint**, select this GitHub repo, and Render reads `render.yaml` automatically. You'll be prompted to fill in the two secrets it marks `sync: false`: `MCP_COP_AUTH_TOKEN` and `MCP_THIEF_AUTH_TOKEN` (generate your own random secrets — never commit them).
+4. Once both services are live, copy their URLs (e.g. `https://hw6-race-cop.onrender.com`) into your `.env` as `MCP_COP_URL`/`MCP_THIEF_URL`, alongside the same `MCP_COP_AUTH_TOKEN`/`MCP_THIEF_AUTH_TOKEN` values you set in the Render dashboard (HW-F18: exactly 2 URLs per group).
+5. **Run against the deployed servers**: `uv run python -m hw6_race.main` — `Hw6RaceSDK.run_match()` (used by the CLI) automatically connects to `MCP_COP_URL`/`MCP_THIEF_URL` when both are set, falling back to in-process servers otherwise (`wiring.build_clients_from_env`, mirroring how the LLM backend is selected) — a pure config change, never a code change.
+6. Render services are reachable over HTTPS at the *platform* level by default, but every tool call still requires the real `MCP_COP_AUTH_TOKEN`/`MCP_THIEF_AUTH_TOKEN` at the *application* level (`TokenAuthManager`) — satisfying HW-F17 independently of the hosting platform. Do not run/test the servers from a hardened organizational network on non-standard ports (HW PDF §5.2).
 
 **Stage 3 — Inter-Group Bonus Round (external, time-boxed)**: requires pairing with a second student group within 1 week of assignment publication (HW-F27, HW-Q06 in `docs/07_risks_and_open_questions.md`) — out of this repository's control. Once paired: play 6 sub-games split 3-and-3 with roles swapped between groups (HW-F27 §12.1), then **both** groups independently email the *exact same* `InterGroupBonusReport` (see `services/reporting/bonus_report.py`, schema verified against the HW PDF's literal example in `tests/unit/test_services/test_reporting/test_bonus_report.py`). `compute_bonus_claim()` implements the winner=10/loser=7/tie=5 scoring rule (HW-F28); a mismatch between the two groups' reports awards 0 points to both sides.
 
@@ -214,7 +209,7 @@ HW6/
 | 11 | Final validation against both PDFs | ✅ done (requirements matrix re-audited row by row; ISO/IEC 25010 self-check performed; 522-entry PRD catalog tallied: 255 done, 240 not-started/future, 17 in progress) |
 | 12 | LLM-driven decision strategy | ✅ done (`LLMDecisionStrategy`: the LLM picks the action directly, falls back to `HeuristicStrategy` on any parse failure) |
 | 13 | Minimax + alpha-beta competitive decision strategy | ✅ done (`MinimaxDecisionStrategy`: depth-limited minimax + alpha-beta + move ordering + transposition table, new default; see §11.1) |
-| 14 | Cloud deployment path (Google Cloud Run) | ✅ code done; 🟨 actual deployment requires your GCP account — run `tools/deploy_cloud_run.sh` (see §8 Stage 2) |
+| 14 | Cloud deployment path (Render) | ✅ code done; 🟨 actual deployment requires your Render account — deploy `render.yaml` as a Blueprint (see §8 Stage 2) |
 
 ## 11. Configuration Guide
 

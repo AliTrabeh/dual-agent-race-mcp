@@ -1,0 +1,25 @@
+# Render Blueprint (Deployment Stage 2, README §8) — deploys both MCP
+# servers from the one shared Dockerfile at the repo root. In the Render
+# dashboard: New + -> Blueprint -> select this repo -> Render reads this
+# file and creates both services. You'll be prompted to fill in the two
+# `sync: false` secrets (never committed here).
+services:
+  - type: web
+    name: hw6-race-cop
+    runtime: docker
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    dockerCommand: "--role cop"
+    envVars:
+      - key: MCP_COP_AUTH_TOKEN
+        sync: false
+
+  - type: web
+    name: hw6-race-thief
+    runtime: docker
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    dockerCommand: "--role thief"
+    envVars:
+      - key: MCP_THIEF_AUTH_TOKEN
+        sync: false

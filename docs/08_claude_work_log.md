@@ -355,3 +355,15 @@ Doubles as the Prompt Engineering Log mandated by Guidelines PDF SG-U04 (prompt 
 - Did not attempt to run `gcloud` commands myself (not installed, and even if it were, I shouldn't authenticate as the user) — the deploy script is written, tested as far as is possible without a live account, and handed off for the user to run.
 - Kept `run_local_match()` and added `run_match()` as a separate method rather than overloading the existing name, to avoid quietly changing what "local" means in a project where that word already carries a specific, documented meaning (Stage 1 vs Stage 2).
 - Re-applied the lesson from the previous chunk's mistake (an ad-hoc CLI run had silently spent real API quota because `main.py` auto-loads real `.env` credentials): every live verification in this chunk used a fake local token, never real cloud credentials.
+
+## Entry 18 — 2026-06-27 — Chunk 14 follow-up: switched the cloud target from Google Cloud Run to Render
+
+**Prompt context/goal**: After Chunk 14 was committed and pushed (Cloud Run), the user said they'd prefer Render instead.
+
+**What was done**:
+1. Removed `tools/deploy_cloud_run.sh` (gcloud-specific, no longer applicable).
+2. Added `render.yaml` — a Render Blueprint declaring both services from the same `Dockerfile`, using `dockerCommand: "--role cop"`/`"--role thief"` to select the role per service (Docker's ENTRYPOINT+CMD pattern — no Dockerfile change needed), with `MCP_COP_AUTH_TOKEN`/`MCP_THIEF_AUTH_TOKEN` marked `sync: false` so Render prompts for them in the dashboard rather than ever reading a committed value.
+3. Confirmed `run_server.py` needed no changes: it already reads `PORT` from the environment with a default, which is exactly how Render (and Cloud Run) inject the real port — the entry point was already platform-agnostic by construction.
+4. Updated README §8 Stage 2, §10's status table, `docs/TODO.md`, and `docs/01_requirements_matrix.md` (HW-F16/HW-F18) to describe Render instead of Cloud Run/gcloud.
+
+**Key decision**: did not rewrite Entry 17 to pretend Cloud Run was never the plan — added this entry instead, since the work log should reflect what actually happened, not a tidied-up version of it. The underlying code (`run_server.py`, `Dockerfile`, `wiring.build_clients_from_env`, `Hw6RaceSDK.run_match()`) needed zero changes for the platform switch — only the deploy-orchestration layer (script vs. Blueprint) and docs changed, confirming the architecture's "deployment is a pure config change" claim held even across a *platform* switch, not just a stage switch.

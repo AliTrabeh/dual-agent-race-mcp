@@ -72,6 +72,7 @@ async def _play_one_role_sub_game(
     """One sub-game where we control `our_role` and wait for the opponent's turns."""
     opp_role = AgentRole.THIEF if our_role == AgentRole.COP else AgentRole.COP
     _us = cop_start if our_role == AgentRole.COP else thief_start
+    _them = thief_start if our_role == AgentRole.COP else cop_start
     state = RaceState(
         grid_size=config.grid_size,
         max_moves=config.max_moves,
@@ -80,7 +81,8 @@ async def _play_one_role_sub_game(
         thief_position=thief_start,
     )
     await own_client.init_bonus_subgame(_us)
-    await opponent_client.start_subgame(_us)
+    try: await opponent_client.start_subgame(_them)
+    except Exception: logger.warning("opponent start_subgame failed — continuing")
     outcome = state.check_outcome()
     while outcome is None:
         for role in (AgentRole.THIEF, AgentRole.COP):  # Thief moves first (HW-F04)
@@ -90,7 +92,8 @@ async def _play_one_role_sub_game(
                 await orchestrator.take_turn(state, role, our_agent, own_client, opponent_client)
                 _new = state.cop_position if role == AgentRole.COP else state.thief_position
                 _act = _action_from_state(_old, _new, _old_b, state.barriers_placed)
-                await opponent_client.choose_action(_act)
+                try: await opponent_client.choose_action(_act)
+                except Exception: logger.warning("opponent choose_action failed — continuing")
                 await own_client.set_bonus_position(_new)
             else:
                 msg = await wait_for_opponent_message(own_client, timeout)

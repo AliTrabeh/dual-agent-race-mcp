@@ -84,10 +84,12 @@ def main(argv: list[str] | None = None) -> int:
         print(f"Config OK: grid_size={config.grid_size}, num_games={config.num_games}")
         return 0
 
-    result = Hw6RaceSDK(config=config).run_match()
+    sdk = Hw6RaceSDK(config=config)
+    result = sdk.run_match()
     _print_summary(result)
     output_path = _write_summary_file(args.output_dir, result)
     print(f"Result written to {output_path}")
+    sdk.send_match_report(result)
 
     has_technical_loss = any(sg.outcome == GameOutcome.TECHNICAL_LOSS for sg in result.sub_games)
     return 1 if has_technical_loss else 0

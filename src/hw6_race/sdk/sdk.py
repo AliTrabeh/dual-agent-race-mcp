@@ -6,6 +6,8 @@ MCP/orchestration layer (sdk/orchestrator.py, sdk/wiring.py) via asyncio.run().
 """
 
 import asyncio
+import logging
+import os
 
 from hw6_race.constants import DEFAULT_RATE_LIMITS_PATH
 from hw6_race.sdk import orchestrator, wiring
@@ -13,6 +15,8 @@ from hw6_race.services.agents.llm_client import LLMClient
 from hw6_race.services.race.models import GameResult
 from hw6_race.shared.config import GameConfig, load_config
 from hw6_race.shared.gatekeeper import ApiGatekeeper, RateLimitConfig
+
+logger = logging.getLogger(__name__)
 
 
 class Hw6RaceSDK:
@@ -59,6 +63,36 @@ class Hw6RaceSDK:
         code change (mirrors how the LLM backend is selected).
         """
         return asyncio.run(self._run_match_async(wiring.build_clients_from_env))
+
+    def send_match_report(self, result: GameResult) -> None:
+        """Email the Internal Game JSON report if Gmail OAuth credentials are configured.
+
+        A no-op (with a log message) when credentials are absent — never raises.
+        Group metadata is read from GROUP_NAME / STUDENTS / GITHUB_REPO / TIMEZONE env vars.
+        """
+        from hw6_race.services.reporting.mailer import MailerError, build_mailer_from_env
+        from hw6_race.services.reporting.schemas import InternalGameReport
+
+        rate_limits = RateLimitConfig.from_file(DEFAULT_RATE_LIMITS_PATH)
+        gatekeeper = ApiGatekeeper(rate_limits, service="email")
+        mailer = build_mailer_from_env(gatekeeper)
+        if mailer is None:
+            return
+        students_raw = os.environ.get("STUDENTS", "Ali Trabeh")
+        report = InternalGameReport.from_game_result(
+            group_name=os.environ.get("GROUP_NAME", "hw6-group"),
+            students=[s.strip() for s in students_raw.split(",")],
+            github_repo=os.environ.get("GITHUB_REPO", "github.com/AliTrabeh/dual-agent-race-mcp"),
+            cop_mcp_url=os.environ.get("MCP_COP_URL", "local"),
+            thief_mcp_url=os.environ.get("MCP_THIEF_URL", "local"),
+            timezone=os.environ.get("TIMEZONE", "UTC"),
+            result=result,
+        )
+        try:
+            mailer.send_report(report.to_json())
+            logger.info("Match report emailed successfully")
+        except MailerError:
+            logger.exception("Failed to email match report — check Gmail OAuth credentials")
 
     async def _run_match_async(self, build_clients) -> GameResult:
         cop_agent, thief_agent = wiring.build_agents(self._config, self._llm_client)

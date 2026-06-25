@@ -1,8 +1,15 @@
 import json
+import sys
+from unittest.mock import MagicMock
 
 import pytest
 
-from hw6_race.services.reporting.mailer import MailerError, ReportMailer
+from hw6_race.services.reporting.mailer import (
+    MailerError,
+    ReportMailer,
+    build_gmail_send_fn,
+    build_mailer_from_env,
+)
 from hw6_race.shared.gatekeeper import ApiGatekeeper, RateLimitConfig
 
 
@@ -58,3 +65,67 @@ def test_send_report_surfaces_rate_limit_as_mailer_error(gatekeeper: ApiGatekeep
 
     with pytest.raises(MailerError):
         mailer.send_report({"a": 1})
+
+
+def test_build_mailer_from_env_returns_none_without_credentials(
+    gatekeeper: ApiGatekeeper, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.delenv("GMAIL_OAUTH_CLIENT_SECRET_PATH", raising=False)
+    monkeypatch.delenv("GMAIL_OAUTH_TOKEN_PATH", raising=False)
+    assert build_mailer_from_env(gatekeeper) is None
+
+
+def test_build_mailer_from_env_returns_mailer_when_both_paths_set(
+    gatekeeper: ApiGatekeeper, monkeypatch: pytest.MonkeyPatch, tmp_path
+) -> None:
+    secret = tmp_path / "secret.json"
+    token = tmp_path / "token.json"
+    secret.write_text("{}")
+    token.write_text("{}")
+    monkeypatch.setenv("GMAIL_OAUTH_CLIENT_SECRET_PATH", str(secret))
+    monkeypatch.setenv("GMAIL_OAUTH_TOKEN_PATH", str(token))
+    mailer = build_mailer_from_env(gatekeeper)
+    assert isinstance(mailer, ReportMailer)
+
+
+def test_build_mailer_from_env_returns_none_when_only_one_path_set(
+    gatekeeper: ApiGatekeeper, monkeypatch: pytest.MonkeyPatch, tmp_path
+) -> None:
+    secret = tmp_path / "secret.json"
+    secret.write_text("{}")
+    monkeypatch.setenv("GMAIL_OAUTH_CLIENT_SECRET_PATH", str(secret))
+    monkeypatch.delenv("GMAIL_OAUTH_TOKEN_PATH", raising=False)
+    assert build_mailer_from_env(gatekeeper) is None
+
+
+def test_build_gmail_send_fn_raises_mailer_error_when_google_not_installed(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setitem(sys.modules, "google", None)
+    monkeypatch.setitem(sys.modules, "google.oauth2", None)
+    monkeypatch.setitem(sys.modules, "google.oauth2.credentials", None)
+    send_fn = build_gmail_send_fn("secret.json", "token.json")
+    with pytest.raises(MailerError, match="Gmail deps not installed"):
+        send_fn("to@example.com", "Subject", "body")
+
+
+def test_build_gmail_send_fn_calls_gmail_api(monkeypatch: pytest.MonkeyPatch) -> None:
+    fake_creds = MagicMock()
+    fake_creds_mod = MagicMock()
+    fake_creds_mod.Credentials.from_authorized_user_file.return_value = fake_creds
+    fake_service = MagicMock()
+    fake_discovery_mod = MagicMock()
+    fake_discovery_mod.build.return_value = fake_service
+
+    monkeypatch.setitem(sys.modules, "google", MagicMock())
+    monkeypatch.setitem(sys.modules, "google.oauth2", MagicMock())
+    monkeypatch.setitem(sys.modules, "google.oauth2.credentials", fake_creds_mod)
+    monkeypatch.setitem(sys.modules, "googleapiclient", MagicMock())
+    monkeypatch.setitem(sys.modules, "googleapiclient.discovery", fake_discovery_mod)
+
+    send_fn = build_gmail_send_fn("secret.json", "token.json")
+    send_fn("grader@example.com", "HW6 Match Report", '{"a":1}')
+
+    fake_creds_mod.Credentials.from_authorized_user_file.assert_called_once_with("token.json")
+    fake_discovery_mod.build.assert_called_once_with("gmail", "v1", credentials=fake_creds)
+    fake_service.users().messages().send.assert_called_once()

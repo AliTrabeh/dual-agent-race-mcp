@@ -17,6 +17,7 @@ from hw6_race.services.race.models import GameResult, SubGameResult
 from hw6_race.services.race.race_engine import default_start_positions
 from hw6_race.services.race.race_state import RaceState
 from hw6_race.services.race.scoring import score_sub_game
+from hw6_race.services.reporting.technical_loss import resolve_technical_losses
 from hw6_race.shared.config import GameConfig
 
 logger = logging.getLogger(__name__)
@@ -111,9 +112,9 @@ async def play_game_async(
 ) -> GameResult:
     """Run `config.num_games` sub-games and aggregate the result.
 
-    A sub-game that raises (e.g. an MCP call failing) is recorded as a
-    Technical Loss rather than crashing the whole match — full rerun-to-6
-    bookkeeping is Chunk 7's responsibility (PRD-005), not implemented here.
+    A sub-game that raises is recorded as a Technical Loss, then retried up
+    to DEFAULT_MAX_RERUN_ATTEMPTS times via resolve_technical_losses() before
+    the match result is returned.
     """
     result = GameResult()
     async with cop_client, thief_client:
@@ -127,4 +128,16 @@ async def play_game_async(
                 logger.exception("Sub-game failed; recording as Technical Loss")
                 sub_game = score_sub_game(GameOutcome.TECHNICAL_LOSS, move_count=0, config=config)
             result.sub_games.append(sub_game)
+
+        async def _rerun_one() -> SubGameResult:
+            cop_s, thief_s = default_start_positions(config)
+            try:
+                return await play_sub_game_async(
+                    config, thief_agent, cop_agent, thief_client, cop_client, cop_s, thief_s
+                )
+            except Exception:
+                logger.exception("Rerun sub-game failed; recording as Technical Loss")
+                return score_sub_game(GameOutcome.TECHNICAL_LOSS, move_count=0, config=config)
+
+        result = await resolve_technical_losses(result, _rerun_one)
     return result

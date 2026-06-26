@@ -57,12 +57,20 @@ async def take_turn(
     agent: BaseAgent,
     own_client: AgentMCPClient,
     opponent_client: AgentMCPClient,
+    drain_inbox: bool = True,
 ) -> None:
-    """One agent's full turn: drain inbox + interpret, compose + relay, decide + apply."""
-    inbox = await own_client.get_inbox()
-    for text in inbox:
-        inference = agent.interpret_message(text)
-        logger.debug("[%s] inferred %s from %r", role.value, inference, text)
+    """One agent's full turn: drain inbox + interpret, compose + relay, decide + apply.
+
+    `drain_inbox=False` skips reading our own inbox here. The inter-group bonus
+    loop owns inbox reads (it waits on the opponent's turn for their message); if
+    our turn also drained the inbox it could consume — and discard — an opponent
+    message that arrived early, leaving the opponent-turn wait to time out.
+    """
+    if drain_inbox:
+        inbox = await own_client.get_inbox()
+        for text in inbox:
+            inference = agent.interpret_message(text)
+            logger.debug("[%s] inferred %s from %r", role.value, inference, text)
 
     observation = observation_for(state, role, agent.believed_opponent_position)
     message = agent.compose_message(observation)

@@ -87,7 +87,9 @@ async def _play_one_role_sub_game(
             if role == our_role:
                 _old = state.cop_position if role == AgentRole.COP else state.thief_position
                 _old_b = state.barriers_placed
-                await orchestrator.take_turn(state, role, our_agent, own_client, opponent_client)
+                await orchestrator.take_turn(
+                    state, role, our_agent, own_client, opponent_client, drain_inbox=False
+                )
                 _new = state.cop_position if role == AgentRole.COP else state.thief_position
                 _act = _action_from_state(_old, _new, _old_b, state.barriers_placed)
                 try: await opponent_client.choose_action(_act)
